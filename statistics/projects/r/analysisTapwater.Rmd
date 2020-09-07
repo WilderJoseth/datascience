@@ -1,0 +1,197 @@
+---
+title: "Analisys Tapwater"
+output: html_document
+---
+
+```{r load-data}
+load('tapwater.rda')
+```
+
+## EDA
+
+```{r cars}
+glimpse(tapwater)
+```
+
+```{r}
+summary(tapwater)
+```
+
+### Bayesian analysis
+Unknown mean and variance
+mu = ?
+sigma = ?
+
+```{r}
+# Hyperparameters
+S <- 10000
+```
+
+##### 1. Bad prior information
+
+##### 1.1. Credible interval
+```{r}
+# Prior parameters
+m_0 <- 45.6
+n_0 <- 10
+v_0 <- n_0 - 1
+s2_0 <- 510.68
+
+# Getting sample statistics
+Y <- tapwater$tthm
+ybar <- mean(Y)
+s2 <- var(Y)
+n <- length(Y)
+
+# Getting posterior parameters
+n_n = n_0 + n
+m_n = (n*ybar + n_0*m_0)/n_n
+v_n = v_0 + n
+s2_n = ((n-1)*s2 + v_0*s2_0 + n_0*n*(m_0 - ybar)^2/n_n)/v_n
+
+# Simulation using Monte Carlo method to posterior distributions
+phi <- rgamma(S, v_n/2, s2_n*v_n/2)
+post_sigma <- 1/sqrt(phi)
+print(quantile(post_sigma, c(0.025, 0.975)))
+print('-------------------------------')
+
+post_mu <- rnorm(S, m_n, post_sigma/sqrt(n_n))
+print(quantile(post_mu, c(0.025, 0.975)))
+print(quantile(post_sigma, c(0.025, 0.975)))
+print('-------------------------------')
+
+pred_y <- rnorm(S, post_mu, post_sigma)
+print(quantile(pred_y, c(0.025, 0.975)))
+```
+
+```{r}
+# Make a prediction
+# Get the probability that tthm greater than 80
+sum(pred_y > 80) / length(pred_y)
+```
+
+##### 1.2. Hypothesis testing
+```{r}
+
+```
+
+
+##### 2. No prior information
+
+##### 2.1. Credible interval
+```{r}
+m_n <- mean(tapwater$tthm)
+n_n <- length(tapwater$tthm)
+v_n <- n_n - 1
+s2_n <- var(tapwater$tthm)
+
+# sample mean
+print(m_n)
+print('-------------------------------')
+
+# getting phi
+phi <- rgamma(S, v_n/2, s2_n*v_n/2)
+
+# getting mean
+post_sigma <- 1/sqrt(phi)
+print(quantile(post_sigma, c(0.025, 0.975)))
+print('-------------------------------')
+
+post_mu <- rnorm(S, m_n, post_sigma/sqrt(n_n))
+print(quantile(post_mu, c(0.025, 0.975)))
+print('-------------------------------')
+
+# getting weight sample from estimate mu and sigma
+pred_y <- rnorm(S, post_mu, post_sigma)
+print(quantile(pred_y, c(0.025, 0.975)))
+```
+```{r}
+# Make a prediction
+# Get the probability that tthm greater than 80
+sum(pred_y > 80) / length(pred_y)
+```
+
+##### 2.2. Hypothesis testing:
+
+* **H_null**: mu = 7.7
+* **H_alternative**: mu != 7.7
+* **Credible level**: 0.95
+```{r}
+sum(pred_y <= 7.7) / length(pred_y)
+```
+
+##### 3. Reasonable prior information
+
+##### 3.1. Credible interval
+
+```{r}
+# Prior parameters
+m_0 <- 35
+n_0 <- 25
+v_0 <- n_0 - 1
+s2_0 <- 156.25
+
+# Getting sample statistics
+Y <- tapwater$tthm
+ybar <- mean(Y)
+s2 <- var(Y)
+n <- length(Y)
+
+# Getting posterior parameters
+n_n = n_0 + n
+m_n = (n*ybar + n_0*m_0)/n_n
+v_n = v_0 + n
+s2_n = ((n-1)*s2 + v_0*s2_0 + n_0*n*(m_0 - ybar)^2/n_n)/v_n
+
+# Simulation using Monte Carlo method to posterior distributions
+phi <- rgamma(S, v_n/2, s2_n*v_n/2)
+post_sigma <- 1/sqrt(phi)
+print(quantile(post_sigma, c(0.025, 0.975)))
+print('-------------------------------')
+
+post_mu <- rnorm(S, m_n, post_sigma/sqrt(n_n))
+print(quantile(post_mu, c(0.025, 0.975)))
+print(quantile(post_sigma, c(0.025, 0.975)))
+print('-------------------------------')
+
+pred_y <- rnorm(S, post_mu, post_sigma)
+print(quantile(pred_y, c(0.025, 0.975)))
+```
+
+```{r}
+# Make a prediction
+# Get the probability that tthm greater than 80
+sum(pred_y > 80) / length(pred_y)
+```
+
+
+##### 4. Reason mean prior information
+
+##### 4.1. Credible interval
+
+```{r}
+m_0 <- 35
+r <- 1
+
+# MCMC
+sigma2 <- seq(0, 1, length = S)
+n_0 <- seq(0, 1, length = S)
+mu <- seq(0, 1, length = S)
+
+sigma2[1] <- 1
+n_0[1] <- 1
+mu[1] <- m_0
+
+for (i in 2:S) {
+  
+  mu[i] <- rnorm(S, mu[1], sigma2[1])
+}
+```
+
+
+
+```{r}
+seq(0, 1, length = 5)
+```
+
+
