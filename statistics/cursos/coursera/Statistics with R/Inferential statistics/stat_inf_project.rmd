@@ -1,0 +1,347 @@
+---
+title: "Statistical inference with the GSS data"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(statsr)
+library(cowplot)
+```
+
+### Load data
+
+Make sure your data and R Markdown files are in the same directory. When loaded
+your data file will be called `gss`. Delete this note when before you submit 
+your work. 
+
+```{r load-data}
+load("gss.Rdata")
+```
+
+
+
+* * *
+
+## Part 1: Data
+
+### About data:
+
+* This data is use to show the behaviors of Americans throughout the time.
+* The participants are all households of United States throughout one adult member of each household, who was selected by the interviewer.
+* Household population covers about 97.3% of Americans.
+
+### Method:
+
+* The data was collected using **multi-stage sample**, where the first stage is based on quotes of age, sex and employment status and the second stage is based on race and income.
+* To collect data, surveys are used, which can last up to 90 minutes.
+
+### Problems:
+
+* No all questions will be answered, this problem can produce **non-response bias**. To reduce the probability of getting this problem, a good schedule is selected.
+
+### Charasterictics of the data:
+
+* This data is observational.
+* Each of these observations is independent each other.
+* This data is representative of the population.
+
+Cantidad de registros
+```{r}
+nrow(gss)
+```
+
+* * *
+
+## Part 2: Research question
+
+#### Research question 1:
+Legalization of abortion is a controvertial issue, even if rape reasons. However, public opinion suggest that women are more agreed with abortion for rape reasons than men.
+In this case, we want to confirm or discard if the proportion of woman who agree with abortion for rape reasons are more than men proportion.
+Variables:
+
+* **sex**: female or male. Categorical variable.
+* **abrape**: Pregnant as result of rape. Categorical variable.
+
+#### Research question 2:
+In this quesion we want to know if the relation between status emplonment and degree is good.
+Variables:
+
+* **wrkslf**: R self-emplyed or works for somebody. Categorical variable.
+* **degree**: RS highest degree. Categorical variable.
+
+#### Research question 3:
+Many studies suggest the white americans earn more money then other races in USA.
+Variables:
+
+* **race**: Race of respondent. Categorical variable.
+* **coninc**: Total family income in constant dollars. Numerical variable.
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+#### Research question 1:
+
+Create our sample:
+```{r}
+df_abortion <- select(gss, sex, abrape)
+```
+
+Clean data:
+```{r}
+sum(is.na(df_abortion$sex))
+```
+
+```{r}
+sum(is.na(df_abortion$abrape))
+```
+
+```{r}
+levels(df_abortion$abrape)[3] <- 'No Opinion'
+```
+
+```{r}
+levels(df_abortion$abrape)
+```
+
+```{r}
+df_abortion[is.na(df_abortion$abrape), 2] <- 'No Opinion' # No Opinion
+```
+
+```{r}
+sum(is.na(df_abortion$abrape))
+```
+
+https://ggplot2.tidyverse.org/reference/geom_text.html
+https://ggplot2.tidyverse.org/reference/labs.html
+
+We can see the there more people who agree with abortion.
+```{r}
+ggplot(df_abortion, aes(x = abrape, fill = sex)) +
+  geom_bar() +
+  geom_text(stat = 'count', aes(label=..count..), position = position_stack(vjust = 0.5)) +
+  labs(title = 'Opinion about abortion in case of rape', x = 'Opinion', y = 'Count')
+```
+
+
+#### Research question 2:
+
+* **wrkslf**: R self-emplyed or works for somebody. Categorical variable.
+* **degree**: RS highest degree. Categorical variable.
+
+```{r}
+df_employee <- select(gss, wrkslf, degree)
+```
+
+```{r}
+sum(is.na(df_employee$wrkslf))
+```
+
+```{r}
+sum(is.na(df_employee$degree))
+```
+
+```{r}
+df_employee <- df_employee %>%
+  filter(!is.na(wrkslf), !is.na(degree))
+```
+
+```{r}
+nrow(df_employee)
+```
+
+We can say that more people work for someone else.
+```{r fig.height=15}
+ #{r fig.width=10, fig.height=20}
+ggplot(df_employee, aes(x = wrkslf, fill = degree)) +
+  geom_bar() +
+  geom_text(stat = 'count', aes(label=..count..), position = position_stack(vjust = 0.5)) +
+  labs(title = 'Status of employment: self-employed or someone else', x = 'Opinion', y = 'Count')
+```
+
+
+#### Research question 3:
+
+```{r}
+df_income <- select(gss, race, coninc)
+```
+
+```{r}
+sum(is.na(df_income$race))
+```
+
+```{r}
+sum(is.na(df_income$coninc))
+```
+
+Replace with the median
+```{r}
+df_income$coninc <- ifelse(is.na(df_income$coninc), median(df_income$coninc, na.rm = TRUE), df_income$coninc)
+```
+
+```{r}
+sum(is.na(df_income$coninc))
+```
+
+```{r}
+summary(df_income)
+```
+
+```{r}
+ggplot(data = df_income, aes(x = race, y = coninc)) +
+  geom_boxplot() +
+  labs(title = 'Income by race', x = 'Race', y = 'Income')
+```
+
+We can see the distribution is right skewed
+```{r}
+ggplot(data = df_income, aes(x = coninc)) +
+  geom_histogram() +
+  labs(title = 'Income distribution')
+```
+
+* * *
+
+## Part 4: Inference
+
+#### Research question 1:
+
+##### Testing hypothesis:
+* **Null hypothesis**: proportion of women and men who agree with abortion in case of rape are the same. **$H_0: \p_{female} = \p_{male}$**
+* **Alternative hypothesis**: proportion of women and men who agree with abortion in case of rape are different. **$H_0: \p_{female} \ne \p_{male}$**
+
+Conditions:
+
+ * **Independence between groups**: Checking conditions of how the data was collected, we can say that this condition is met.
+ * **Success-failure**: 
+ 
+```{r}
+n <- 57061
+n_female <- 31915
+n_female_success <- 17503
+n_male <- 25146
+n_male_success <- 14362
+p_pooled <- (n_female_success + n_male_success) / n
+
+print('P_pooled:', str(p_pooled))
+print('Checking condition of success for females:', str(p_pooled * n_female))
+print('Checking condition of failure for females:', str((1 - p_pooled) * n_female))
+print('Checking condition of success for males:', str(p_pooled * n_male))
+print('Checking condition of failure for males:', str((1 - p_pooled) * n_male))
+
+print('Success-failure condition is met')
+```
+ 
+In this case, inference for difference of two proportion using R needs only two options for **abrape** so I will change "No Opinion" for "No" in order to avoid problems with the tool.
+```{r}
+df_abortion[df_abortion$abrape == 'No Opinion', 2] = 'No' 
+```
+
+Applying inference
+```{r}
+# Significance level: 0.05
+inference(y = abrape, x = sex, data = df_abortion, statistic = 'proportion', type = 'ht', method = 'theoretical', alternative = 'twosided', null = 0, success = 'Yes')
+```
+
+**Conclusion**: in this case, p-value is lower than significance level, so I reject the null hypothesis. We can say that there is a difference between proportion of women and men who support abortion is case of rape with 95% of confidence.
+
+#### Research question 2:
+
+* **Null hypothesis**: there is no difference in the impact of degree study in status employment.
+* **Alternative hypothesis**: there is a difference in the impact of degree study in status employment.
+
+Conditions:
+
+ * **Independence**: Checking conditions of how the data was collected, we can say that this condition is met.
+ * **Sample size / distribution**: Each scenario (cell count) has more than 5 expected cases.
+
+Table:
+```{r}
+data.frame( type= c('Self-employed', 'Someone else'), lt_high_school= c(1249, 8973), high_school= c(2929, 24860), junior_college= c(296, 2709), bachellor= c(1040, 6800), graduate= c(570, 3254))
+```
+
+Calculating expected values:
+```{r}
+# Self-employed
+e_11 <- (6084 * 10222) / 52680
+e_12 <- (6084 * 27789) / 52680
+e_13 <- (6084 * 3005) / 52680
+e_14 <- (6084 * 7840) / 52680
+e_15 <- (6084 * 3824) / 52680
+
+# Someone else
+e_21 <- (46596 * 10222) / 52680
+e_22 <- (46596 * 27789) / 52680
+e_23 <- (46596 * 3005) / 52680
+e_24 <- (46596 * 7840) / 52680
+e_25 <- (46596 * 3824) / 52680
+
+
+print('Self-employed')
+print('e_11:', str(e_11))
+print('e_12:', str(e_12))
+print('e_13:', str(e_13))
+print('e_14:', str(e_14))
+print('e_15:', str(e_15))
+
+print('Someone else')
+print('e_21:', str(e_21))
+print('e_22:', str(e_22))
+print('e_23:', str(e_23))
+print('e_24:', str(e_24))
+print('e_25:', str(e_25))
+
+print('Degree of freedom')
+d_freedom <- (5 -1)*(2 - 1)
+print(d_freedom)
+```
+
+Calculating chi-square
+```{r}
+x_2 <- ((1249 - e_11)**2) / e_11 + ((2929 - e_12)**2) / e_12 + ((296 - e_13)**2) / e_13 + ((1040 - e_14)**2) / e_14 + ((570 - e_15)**2) / e_15 + ((8973 - e_21)**2) / e_21 + ((24860 - e_22)**2) / e_22 + ((2709 - e_23)**2) / e_23 + ((6800 - e_24)**2) / e_24 + ((3254 - e_25)**2) / e_25
+
+print(x_2)
+```
+
+```{r}
+pchisq(x_2, d_freedom, lower.tail = FALSE)
+```
+
+**Conclusion**: p-value is lower than significance level, so we reject null hypothesis.
+
+#### Research question 3:
+
+* Null hypothesis: Average income for white people is the same for black people.
+* Alternative hypothesis: Average income for white people is not the same for black people.
+
+Conditions:
+
+ * **Independence between groups**: Checking conditions of how the data was collected, we can say that this condition is met.
+ * **Normality**: we have enough data to say that this condition is met.
+
+Difference between means:
+
+Removing other options.
+```{r}
+df_income_white_black <- filter(df_income, race != 'Other')
+df_income_white_black$race <- droplevels(df_income_white_black$race)
+levels(df_income_white_black$race)
+```
+
+Calculating inference.
+```{r}
+inference(y = coninc, x = race, data = df_income_white_black, statistic = 'mean', type = 'ht', method = 'theoretical', alternative = 'twosided', null = 0)
+```
+
+**Conclusion**: p-value is lower than significance level, so we can conclude that there is a difference between average income of white people and black people.
+

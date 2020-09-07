@@ -1,0 +1,290 @@
+---
+title: "Modeling and prediction for movies"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(statsr)
+library(caret)
+library(gridExtra)
+library(plotly)
+```
+
+### Load data
+
+Make sure your data and R Markdown files are in the same directory. When loaded
+your data file will be called `movies`. Delete this note when before you submit 
+your work. 
+
+```{r load-data}
+load("movies.Rdata")
+```
+
+
+
+* * *
+
+## Part 1: Data
+This data is collected from Rotten Tomatoes using random mehtods, so we can say that this data is generalizable to population.
+This data is also observational, so we can only get relations between variables.
+
+* * *
+
+## Part 2: Research question
+
+We want to predict critics score on Rotten Tomatoes of movies. In general, we know that cristics look for innovation and messages among others. However, there are opinions who say that other factors influence on critics evaluations, for example, if the director ever won an Oscar (another movie), opinions tend to favour director's movie.
+
+##### Response variable:
+
+* **critics_score (numerical)**: Critics score on Rotten Tomatoes.
+
+##### Explanatory variable:
+
+* **runtime (numerical)**: Runtime of movie (in minutes).
+* **imdb_rating (numerical)**: Rating on IMDB.
+* **imdb_num_votes (numerical)**: Number of votes on IMDB.
+* **best_pic_nom (categorical)**: Whether or not the movie was nominated for a best picture Oscar (no, yes).
+* **best_pic_win (categorical)**: Whether or not the movie won a best picture Oscar (no, yes).
+* **best_dir_win (categorical)**: Whether or not the director of the movie ever won an Oscar (no, yes) – not that this is not necessarily whether the director won an Oscar for the given movie
+* **audience_score (numerical)**: Audience score on Rotten Tomatoes.
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+#### Show distribution of response variable:
+
+In the summary and boxplot, reponse variable (critics_score) looks having a nearly normal distribution; however in density plot, the explanatory variable behavior is more irregular.
+In response variable, this behavior is not a problem, the most important thing is not to have missing values.
+```{r}
+summary(movies$critics_score)
+```
+
+```{r}
+ggplot(data = movies, aes(y = critics_score)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = movies, aes(x = critics_score)) +
+  geom_density(fill = 'deepskyblue')
+```
+
+There is no missing values, so our response variable is OK.
+```{r}
+sum(is.na(movies$critics_score))
+```
+
+#### Show distribution of explanatory variables:
+
+##### Showing numerical variables:
+In the summary table, we focus on missing values and outliers, because theses cases have a huge impact in our model.
+There is only one missing value (runtime variable) where its impact is affordable, so we will remove it from our sample.
+Another important issue is to identify numerical variables that have outliers. Showing this summary, we can say that runtime and imdb_num_votes variables have outliers, because their maximum value it far way from mean.
+```{r}
+movies %>%
+  select(runtime, imdb_rating, imdb_num_votes, best_pic_nom, best_pic_win, best_dir_win, audience_score) %>%
+  summary()
+```
+
+
+```{r}
+plot1 <- ggplot(data = movies, aes(x = runtime)) +
+  geom_histogram()
+plot2 <- ggplot(data = movies, aes(x = imdb_num_votes)) +
+  geom_histogram()
+plot3 <- ggplot(data = movies, aes(x = imdb_rating)) +
+  geom_histogram()
+plot4 <- ggplot(data = movies, aes(x = audience_score)) +
+  geom_histogram()
+```
+
+* **runtime** variable has some outliers, but its distribution is nearly normal.
+* **imdb_num_votes** variable has many outliers and its distribution is rigth skewed.
+* **imdb_rating** variable has a nearly normal distribution.
+* **audience_score** variable has an irregular distribution. We can say that is nearly left skewed.
+
+In conlusion, we should be worry for imdb_num_votes, because this variable will not meet regression requirements. However, I will use this variable for experiment reasons.
+```{r}
+grid.arrange(plot1, plot2, plot3, plot4, ncol = 2, nrow = 2)
+```
+
+##### Showing categorical variables:
+
+```{r}
+plot5 <- ggplot(data = movies, aes(x = factor(best_dir_win), y = critics_score)) +
+  geom_boxplot()
+plot6 <- ggplot(data = movies, aes(x = factor(best_pic_win), y = critics_score)) +
+  geom_boxplot()
+```
+
+* This plot of **best_pic_win** variable shows that movies were nominated for a best picture Oscar tend to have higher scores. The difference between two cases is noticeable, due to their means are too far away each other.
+* This plot of **best_dir_win** variable shows that directores who ever won an oscar tend to have higher scores. We also see that directores, who do not won an oscar, are more sparse.
+
+```{r}
+grid.arrange(plot5, plot6, ncol = 2)
+```
+
+* * *
+
+## Part 4: Modeling
+
+#### Cleaning data
+Remove missing values.
+```{r}
+movies_clean <- select(movies, critics_score, runtime, imdb_rating, imdb_num_votes, best_pic_nom, best_pic_win, best_dir_win, audience_score)
+movies_clean <- filter(movies_clean, !is.na(runtime))
+```
+
+#### Preprocessing data.
+We standarize numerical variables, in order to improve results of the model.
+```{r}
+preprocessvalues <- movies_clean %>%
+  select(runtime, imdb_rating, imdb_num_votes, audience_score) %>%
+    preProcess(method = c('scale', 'center'))
+
+transformedvalues <- predict(preprocessvalues, movies_clean)
+summary(transformedvalues)
+```
+
+#### Diagnostics
+We check if conditions for regression modeling are satisfied.
+This condition is fairly satisfied for response variable, because its distribution is nearly normal.
+```{r}
+lm_full <- lm(critics_score ~ runtime + imdb_rating + imdb_num_votes + best_pic_nom + best_pic_win + best_dir_win + audience_score, data = transformedvalues)
+```
+
+```{r}
+hist(lm_full$residuals)
+qqnorm(lm_full$residuals)
+qqline(lm_full$residuals)
+```
+
+```{r}
+plot(lm_full$residuals ~ lm_full$fitted)
+plot(abs(lm_full$residuals) ~ lm_full$fitted)
+```
+
+We check conditions for explanatory variables (Fitted: predicted values (y-hat)).
+
+We see that this condition is not satisfied, because the variability is not constant. Some regions have few observation and others have mnay.
+```{r}
+plot(lm_full$residuals ~ transformedvalues$runtime)
+abline(0, 0)
+
+plot(lm_full$residuals ~ transformedvalues$imdb_rating)
+abline(0, 0)
+
+plot(lm_full$residuals ~ transformedvalues$imdb_num_votes)
+abline(0, 0)
+
+plot(lm_full$residuals ~ transformedvalues$audience_score)
+abline(0, 0)
+```
+
+
+#### Solution
+To solve these problems, we will limit the number of observations to regions where there many observations, because its variability is constant. This region goes from -1.5 to 1.5.
+```{r}
+transformedvalues <- transformedvalues %>%
+  filter(runtime >= -1.5, runtime <= 1.5, imdb_rating >= -1.5, imdb_rating <= 1.5, imdb_num_votes >= -1.5, imdb_num_votes <= 1.5, audience_score >= -1.5, audience_score <= 1.5)
+
+lm_full <- lm(critics_score ~ runtime + imdb_rating + imdb_num_votes + best_pic_nom + best_pic_win + best_dir_win + audience_score, data = transformedvalues)
+```
+
+```{r}
+hist(lm_full$residuals)
+qqnorm(lm_full$residuals)
+qqline(lm_full$residuals)
+```
+
+```{r}
+plot(lm_full$residuals ~ transformedvalues$runtime)
+abline(0, 0)
+
+plot(lm_full$residuals ~ transformedvalues$imdb_rating)
+abline(0, 0)
+
+plot(lm_full$residuals ~ transformedvalues$imdb_num_votes)
+abline(0, 0)
+
+plot(lm_full$residuals ~ transformedvalues$audience_score)
+abline(0, 0)
+```
+
+#### Model selection
+We will use backwads elimination by adjusted R-square.
+```{r}
+summary(lm_full)
+```
+
+```{r}
+lm1 <- lm(critics_score ~ imdb_rating + imdb_num_votes + best_pic_nom + best_pic_win + best_dir_win + audience_score, data = transformedvalues)
+summary(lm1)$adj.r.squared
+
+lm2 <- lm(critics_score ~ runtime + imdb_num_votes + best_pic_nom + best_pic_win + best_dir_win + audience_score, data = transformedvalues)
+summary(lm2)$adj.r.squared
+
+lm3 <- lm(critics_score ~ runtime + imdb_rating + best_pic_nom + best_pic_win + best_dir_win + audience_score, data = transformedvalues)
+summary(lm3)$adj.r.squared
+
+lm4 <- lm(critics_score ~ runtime + imdb_rating + imdb_num_votes + best_pic_win + best_dir_win + audience_score, data = transformedvalues)
+summary(lm4)$adj.r.squared
+
+lm5 <- lm(critics_score ~ runtime + imdb_rating + imdb_num_votes + best_pic_nom + best_dir_win + audience_score, data = transformedvalues)
+summary(lm5)$adj.r.squared
+
+lm6 <- lm(critics_score ~ runtime + imdb_rating + imdb_num_votes + best_pic_nom + best_pic_win + audience_score, data = transformedvalues)
+summary(lm6)$adj.r.squared
+
+lm7 <- lm(critics_score ~ runtime + imdb_rating + imdb_num_votes + best_pic_nom + best_pic_win + best_dir_win, data = transformedvalues)
+summary(lm7)$adj.r.squared
+```
+
+The best adjusted R-square is **0.4796**.
+```{r}
+summary(lm7)
+```
+
+* * *
+
+## Part 5: Prediction
+
+```{r}
+# Showing top data
+head(movies_clean)
+
+# Setting variables
+runtime <- 80
+rating <- 5.5
+votes <- 899
+best_pic_nom <- 0
+best_pic_win <- 0
+best_dir_win <- 0
+
+# Standarize observactions
+predictdata = data.frame(runtime = c(runtime), imdb_rating = c(rating), imdb_num_votes = c(votes), audience_score = c(1000))
+transformedvalues2 <- predict(preprocessvalues, predictdata)
+
+# Predict score
+54.7772 - 0.6354*transformedvalues2$runtime + 26.2165*transformedvalues2$imdb_rating - 8.1845*transformedvalues2$imdb_num_votes + 15.0411*best_pic_nom - 10.1401*best_pic_win + 6.4504*best_dir_win
+```
+
+* * *
+
+## Part 6: Conclusion
+
+Linear regression is easy and powerful, for that reason this method is one of the most popular to make predictions. However, we need to prepare the data to get good predictions. Working with this data, the most difficult shortcoming was its variability, because some variables were to skewed, and that makes difficult to get good predictions.
+
+For me, the most difficult variables are the caregorical. In this case, I will have to use ont-hot encoding.
+
