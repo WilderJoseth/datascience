@@ -1,0 +1,215 @@
+---
+title: "Bayesian regression"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Libraries
+library(BAS)
+library(ggplot2)
+```
+
+# Data understanding
+
+## Load data
+```{r}
+data(bodyfat)
+```
+
+## Exploratory data analysis
+```{r}
+summary(bodyfat)
+```
+
+# Linear Regression model
+To construct bayesian models using linear regression I will use **reference priors**, so a good way to get estimate parameters is using "Frequentist Ordinary Least Square (OLS)", because OLS has the same results.
+
+Conditions:
+
+* Residuals should be independent and identically distributed and normal distributed with mean zero and unknown variance.
+
+## Simple linear regression
+```{r}
+# Use OLS method to calculate estimate parameters
+bodyfat.lm <- lm(Bodyfat ~ Abdomen, data = bodyfat)
+summary(bodyfat.lm)
+```
+
+```{r}
+beta <- coef(bodyfat.lm)
+
+# Visualize regression line on the scatter plot
+library(ggplot2)
+ggplot(data = bodyfat, aes(x = Abdomen, y = Bodyfat)) +
+  geom_point(color = "blue") +
+  geom_abline(intercept = beta[1], slope = beta[2], size = 1) +
+  xlab("abdomen circumference (cm)") 
+```
+
+### Use reference prior to calculate posterior distribution of estimate parameters
+Verify Conditions of resudials:
+
+The residuals and fitted values should be uncorrelated, and the expected value of the residuals is zero
+```{r}
+# Combine residuals and fitted values into a data frame
+result = data.frame(fitted_values = fitted.values(bodyfat.lm),
+                    residuals = residuals(bodyfat.lm))
+
+# Load library and plot residuals versus fitted values
+library(ggplot2)
+ggplot(data = result, aes(x = fitted_values, y = residuals)) +
+  geom_point(pch = 1, size = 2) + 
+  geom_abline(intercept = 0, slope = 0) + 
+  xlab(expression(paste("fitted value ", widehat(Bodyfat)))) + 
+  ylab("residuals")
+```
+
+Check normality.
+```{r}
+plot(bodyfat.lm, which = 2)
+```
+
+Both conditions are met, so linear regression is a reasonable approximation.
+
+#### Calculate credible intervals
+Under reference prior distribution, credible intervals are **numerically equivalent** to the confidence intervals from OLS.
+
+```{r}
+summary(bodyfat.lm)$coef
+```
+
+Interpretation: based on the data, we believe that there is 95% chance that body fat will increase by 5.75% up to 6.88% for every additional 10 centimeter increase in the waist circumference.
+```{r}
+output = summary(bodyfat.lm)$coef[, 1:2]
+
+out = cbind(output, confint(bodyfat.lm))
+colnames(out) = c("posterior mean", "posterior std", "2.5", "97.5")
+round(out, 2)
+```
+
+#### Credible Intervals for the mean and prediction
+
+```{r}
+# Create new data
+new_x <- seq(min(bodyfat$Abdomen), max(bodyfat$Abdomen), length.out = 100)
+new_x[1:5]
+```
+
+##### Mean
+Calculate credible interval for the mean based on each observation.
+```{r}
+ymean <- predict(bodyfat.lm, newdata = data.frame(Abdomen = new_x), interval = "confidence", level = 0.95)
+ymean[1:5, ]
+```
+
+##### New prediction
+Calculate credible interval for the new prediction based on each observation.
+```{r}
+ypred = predict(bodyfat.lm, newdata = data.frame(Abdomen = new_x), interval = "prediction", level = 0.95)
+ypred[1:5, ]
+```
+
+## Multiple linear regression
+
+```{r}
+# Use OLS method to calculate estimate parameters
+# BIC: the model is based on the non-informative reference prior.
+# bestmodel = rep(1, 15): force the model to include all predictors.
+bodyfat.bas <- bas.lm(Bodyfat ~ ., data = bodyfat, prior = 'BIC', modelprior = Bernoulli(1), bestmodel = rep(1, 15), n.models = 1)
+bodyfat.bas
+```
+
+### Calculate posterior means and posterior standard deviations
+
+```{r}
+bodyfat.coef = coef(bodyfat.bas)
+bodyfat.coef
+```
+Observations:
+
+* **post p(B != 0)**: probability that a parameter can be non-zero. In this case is 1, because I forced it to include all parameters.
+
+```{r}
+par(mfrow = c(4, 4), col.lab = "darkgrey", col.axis = "darkgrey", col = "darkgrey")
+plot(bodyfat.coef, subset = 2:15, ask = F)
+```
+
+
+### Credible intervals for the parameters
+
+```{r}
+confint(bodyfat.coef, parm = 2:15)
+```
+
+```{r}
+out = confint(bodyfat.coef)[, 1:2]  
+
+# Extract the upper and lower bounds of the credible intervals
+names = c("posterior mean", "posterior std", colnames(out))
+out = cbind(bodyfat.coef$postmean, bodyfat.coef$postsd, out)
+colnames(out) = names
+
+round(out, 2)
+```
+
+
+
+
+
+
+# Model selection
+
+```{r}
+# In bayesian aproximantion AIC = BIC
+# k = log(n)
+# select the model with the smallest BIC
+
+n <- nrow(bodyfat)
+
+bodyfat.lm <- lm(Bodyfat ~ ., data = bodyfat)
+
+bodyfat.step <- step(bodyfat.lm, k=log(n))
+```
+
+
+```{r}
+# Using BAS package
+bodyfat.BIC = bas.lm(Bodyfat ~ ., data = bodyfat,
+                 prior = "BIC", modelprior = uniform())
+
+bodyfat.BIC
+```
+
+```{r}
+# Find the index of the model with the largest logmarg
+best = which.max(bodyfat.BIC$logmarg)
+
+# Retreat the index of variables in the best model, with 0 as the index of the intercept
+bestmodel = bodyfat.BIC$which[[best]]
+bestmodel
+```
+
+```{r}
+# Create an indicator vector indicating which variables are used in the best model
+bestgamma = rep(0, bodyfat.BIC$n.vars) 
+
+# Create a 0 vector with the same dimension of the number of variables in the full model
+bestgamma[bestmodel + 1] = 1  
+
+# Change the indicator to 1 where variables are used
+bestgamma
+```
+
+
+
+
+
+
+
+
+
+
