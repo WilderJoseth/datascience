@@ -114,6 +114,7 @@ ypred[1:5, ]
 ```
 
 ## Multiple linear regression
+Under reference prior like prior information, I have to calculate esimate parameters using OLS method.
 
 ```{r}
 # Use OLS method to calculate estimate parameters
@@ -133,6 +134,7 @@ Observations:
 
 * **post p(B != 0)**: probability that a parameter can be non-zero. In this case is 1, because I forced it to include all parameters.
 
+### Plot posterior distribution of all predictors based on OLS estimate parameter
 ```{r}
 par(mfrow = c(4, 4), col.lab = "darkgrey", col.axis = "darkgrey", col = "darkgrey")
 plot(bodyfat.coef, subset = 2:15, ask = F)
@@ -156,25 +158,35 @@ colnames(out) = names
 round(out, 2)
 ```
 
+Observation: all predictors, except "Density", include zero in their credible interval, that may mean that the model could be better with fewer predictors.
 
+## Model selection
+To get the best model, I will use Bayesian Information Criterion (BIC), that is one of the most popular criterias. In this case, the model with the smallest BIC is the best (parsimonious model). 
 
+One way to calculate BIC is using frequentist OLS functions, because, under reference prior method, frequentist estimate parameters are numerically same.
 
-
-
-# Model selection
+### Backward Elimination with BIC
+With this method I will start with all predictors, and I will remove one by one until getting the smallest BIC.
+In OLS functions there are BIC parameter, but AIC (Akaike information criterion). However, AIC is numerically same that BIC, but using `k=log(n)`.
 
 ```{r}
-# In bayesian aproximantion AIC = BIC
+# In bayesian aproximation AIC = BIC
 # k = log(n)
 # select the model with the smallest BIC
 
+# Get number of observations
 n <- nrow(bodyfat)
 
+# Calculate frequentist OLS linear regression model
 bodyfat.lm <- lm(Bodyfat ~ ., data = bodyfat)
 
 bodyfat.step <- step(bodyfat.lm, k=log(n))
 ```
 
+Showing the result, the parsimonious model has **BIC = 133.3**, where there are only two predictors: Chest and Density.
+
+### Get the best BIC using BAS package 
+This method does not use backward steps, but calculate log of marginal likelihood of each model, where the largest value corresponds to the smallest BIC.
 
 ```{r}
 # Using BAS package
@@ -184,6 +196,8 @@ bodyfat.BIC = bas.lm(Bodyfat ~ ., data = bodyfat,
 bodyfat.BIC
 ```
 
+Find the model with the largest marginal likelihood by its index. Once the best model is identified, find the indexs of predictors that are part of that model.
+In this case, the beest predictors are 1 and 7 index.
 ```{r}
 # Find the index of the model with the largest logmarg
 best = which.max(bodyfat.BIC$logmarg)
@@ -193,6 +207,7 @@ bestmodel = bodyfat.BIC$which[[best]]
 bestmodel
 ```
 
+In this code, I can convert predictors of the best model in a vector, where predictors with value one should be selected.
 ```{r}
 # Create an indicator vector indicating which variables are used in the best model
 bestgamma = rep(0, bodyfat.BIC$n.vars) 
@@ -204,6 +219,81 @@ bestgamma[bestmodel + 1] = 1
 bestgamma
 ```
 
+### Coefficient Estimates Under Reference Prior for Best BIC Model
+Once indentified the best model, I can use it to calculate the posterior distribution of its variables.
+
+```{r}
+# Fit the best BIC model by imposing which variables to be used using the indicators
+cog.bestBIC = bas.lm(Bodyfat ~ ., data = bodyfat,
+                     prior = "BIC", n.models = 1,  # We only fit 1 model (the best model)
+                     bestmodel = bestgamma,  # We use bestgamma to indicate variables 
+                     modelprior = uniform())
+
+# Retreat coefficients information
+cog.coef = coef(cog.bestBIC)
+
+# Retreat bounds of credible intervals
+out = confint(cog.coef)[, 1:2]
+
+# Combine results and construct summary table
+coef.BIC = cbind(cog.coef$postmean, cog.coef$postsd, out)
+names = c("post mean", "post sd", colnames(out))
+colnames(coef.BIC) = names
+coef.BIC
+```
+
+The function only calculated credible intervals of variables of the best model.
+
+### Control model uncertainty
+When there are many models with similar BIC, there could be problems to select the best. So, to be more sure about decision, I will use Bayes Factors.
+
+Number of models by their number of predictors: `2^p` where p = number of predictors.
+
+
+Construct probability distribution for all models (`2^p`) taking account of the following parameters:
+
+* **prior = BIC**: that means that I will work with reference prior.
+* **modelprior = uniform**: that means I will assin e same prior probability for all predictors.
+```{r}
+# Use `bas.lm` for regression
+body_bas = bas.lm(Bodyfat ~ ., 
+                 data = bodyfat, prior = "BIC",
+                 modelprior = uniform())
+
+# show all tools that I can use for body_bas
+names(body_bas)
+```
+
+**BF**: Bayes Factors
+```{r}
+round(summary(body_bas), 3)
+```
+Showing the result, I can say the following:
+
+* All top 5 models are agreed that Weight, Height, Neck, Hip, Thigh, Knee, Biceps, Forearm and Wrist should be excluded from the model, because they are zero.
+* Model 1 and model 2 have the two highest posterior probabilities.
+
+Calculate **marginal posterior inclusion probability** (pip) of each predictor.
+```{r}
+print(body_bas)
+```
+
+#### Visualize model uncertainty
+
+Where:
+
+* **y-axis**: predictors
+* **x-axis**: models
+
+Predictors with black color, are not include the model.
+```{r}
+image(body_bas, rotate = F)
+```
+
+
+```{r}
+coef(body_bas)
+```
 
 
 
