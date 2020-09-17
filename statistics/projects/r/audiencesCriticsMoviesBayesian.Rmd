@@ -1,0 +1,192 @@
+---
+title: "Audiences and Critics Movies - Bayesian Analysis"
+output: html_document
+---
+
+# Introduction
+
+##### Libraries
+```{r}
+# library(statsr)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+load('data/movies.Rdata')
+```
+
+```{r}
+View(movies)
+```
+
+```{r}
+movies <- movies %>% 
+            select(title_type, genre, runtime, mpaa_rating, thtr_rel_year, thtr_rel_year, thtr_rel_day, dvd_rel_year,
+                   dvd_rel_month, dvd_rel_day, imdb_rating, imdb_num_votes, critics_rating, critics_score, audience_score,
+                   audience_rating, best_pic_nom, best_pic_win, best_actor_win, best_actress_win, best_dir_win, top200_box)
+```
+
+```{r}
+summary(movies)
+```
+
+```{r}
+movies <- movies %>%
+  mutate(dvd_rel_year = ifelse(is.na(dvd_rel_year), 2004, dvd_rel_year))
+```
+
+```{r}
+movies <- movies %>%
+  mutate(dvd_rel_month = ifelse(is.na(dvd_rel_month), 6, dvd_rel_month))
+```
+
+```{r}
+movies <- movies %>%
+  mutate(dvd_rel_day = ifelse(is.na(dvd_rel_day), 15, dvd_rel_day))
+```
+
+```{r}
+movies <- movies %>%
+  mutate(runtime = ifelse(is.na(runtime), 103, runtime))
+```
+
+```{r}
+summary(movies)
+```
+
+## Exploring predictor variables
+
+### Analyze runtime
+
+```{r}
+ggplot(data = movies, aes(x = runtime)) +
+  geom_histogram()
+```
+
+#### Normal-Normal conjugate family
+
+Conditions: know variance
+
+```{r}
+S <- 10000
+```
+
+```{r}
+sigma <- 5.83
+```
+
+Prior distribution
+```{r}
+# Prior information
+v_0 <- 90
+t2_0 <- 30.25
+
+# Simulation to get prior distribution
+prior_mu <- rnorm(S, v_0, t2_0)
+quantile(prior_mu, c(0.025, 0.975))
+```
+
+Prior predictive distribution
+```{r}
+prior_x <- rnorm(prior_mu, sigma**2)
+quantile(prior_x, c(0.025, 0.975))
+```
+
+Posterior distribution
+```{r}
+# Sample information
+n <- length(movies$runtime)
+x_mean <- mean(movies$runtime)
+  
+v_n <- (v_0*sigma**2 + n*x_mean*t2_0) / (sigma**2 + n*t2_0)
+t_n <- sqrt(sigma**2*t2_0/(sigma**2 + n*t2_0))
+post_mu <- rnorm(S, v_n, t_n)
+quantile(post_mu, c(0.025, 0.975))
+```
+
+Posterior predictive distribution
+```{r}
+post_x <- rnorm(post_mu, sigma**2)
+quantile(post_x, c(0.025, 0.975))
+```
+
+
+Hyperparameters
+```{r}
+S <- 10000
+```
+
+### No Prior information
+
+```{r}
+# Observations
+Y_mean <- mean(movies$runtime)
+n <- length(movies$runtime)
+s2 <- var(movies$runtime)
+```
+
+#### Calculate posterior distribution
+Morte Carlo simulation
+```{r}
+phi <- rgamma(S, (n - 1)/2, s2*(n - 1)/2)
+```
+
+```{r}
+sigma <- 1/sqrt(phi)
+post_mu <- rnorm(S, Y_mean, sigma/sqrt(n))
+```
+
+#### Calculate posterior predictive distribution
+
+```{r}
+pred_y <- rnorm(S, post_mu, sigma)
+```
+
+```{r}
+quantile(pred_y, c(0.025,0.975))
+```
+
+```{r}
+df <- data.frame(pred_y = sort(pred_y))
+
+ggplot(data = df, aes(x = pred_y)) +
+  geom_histogram()
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
