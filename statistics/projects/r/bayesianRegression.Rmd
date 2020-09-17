@@ -296,8 +296,19 @@ coef(body_bas)
 ```
 
 
+```{r}
+output = data.frame(model.size = body_bas$size, model.prob = body_bas$postprobs)
+
+# Plot model size vs mode posterior probability
+ggplot(data = output, aes(x = model.size, y = model.prob)) +
+  geom_point(color = "blue", pch = 17, size = 3) +
+  xlab("model size") + ylab("model posterior probability")
+```
 
 
+```{r}
+2^14
+```
 
 
 
