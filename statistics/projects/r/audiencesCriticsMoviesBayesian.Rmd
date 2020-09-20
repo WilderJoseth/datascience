@@ -3,23 +3,70 @@ title: "Audiences and Critics Movies - Bayesian Analysis"
 output: html_document
 ---
 
-# Introduction
+#### Autor: Wilder R.
+#### Date: 18/09/2020
 
-##### Libraries
+# Table of contents
+#### 1. Introduction
+#### 2. Methodology
+* 2.1. Business Understanding
+* 2.2. Analytic Approach
+* 2.3. Data Requirements
+* 2.4. Data Collection
+* 2.5. Data Understanding (exploratory data analysis)
+
+#### 3. Results
+#### 4. Conclusions
+#### 5. References
+
+# 1. Introduction
+This is a project to apply Bayesian skills in order to keep learning about Bayesian Statistics.
+
+For this project I will use a data about movies.
+
+# 2. Methodology
+
+## 2.1. Business Understanding
+The first question to should be answered is: Does the business want to reduce costs or increase profitability? In this case, they want to increase profitability.
+
+Answered the question, the next step is how to achieve this goal. So, I will define the objetive of this project: understand **what features make popular a movie**.
+
+## 2.2. Analytic Approach
+The first thing that I have to do is to identify what is the target variable in order to define what model I will use to solve this problem. In this case, this target variable is not defined for the business, and showing the data there are many candidates.
+
+To make this work easy I will choose "imdb_num_votes", because is easy to understand. More votes, more popular.
+
+Once identified the target variable, I have to understand what kind of variable is, in this case is a continuos variable. So, a good model to handle it is a **regression model**.
+
+## 2.3. Data Requirements
+To create a regression model I will need a structure data.
+
+## 2.4. Data Collection
+There is small dataset collected from Rotten Tomatoes and IMDB, where there are movies released before 2016.
+
+Another questions to response
+* How to read the data? Load all observations in one read, because there are few observations.
+* How to handle missing values? Use statistical method to fill them. Otherwise, these observations should be removed.
+
+## 2.5. Data Understanding (exploratory data analysis)
+
 ```{r}
 # library(statsr)
 library(dplyr)
 library(ggplot2)
+library(faraway)
 ```
 
+### 2.5.1. Load data
 ```{r}
 load('data/movies.Rdata')
 ```
 
 ```{r}
-View(movies)
+# View(movies)
 ```
 
+### 2.5.2. Select important variables
 ```{r}
 movies <- movies %>% 
             select(title_type, genre, runtime, mpaa_rating, thtr_rel_year, thtr_rel_year, thtr_rel_day, dvd_rel_year,
@@ -31,6 +78,7 @@ movies <- movies %>%
 summary(movies)
 ```
 
+### 2.5.3. Handle missing values
 ```{r}
 movies <- movies %>%
   mutate(dvd_rel_year = ifelse(is.na(dvd_rel_year), 2004, dvd_rel_year))
@@ -55,7 +103,32 @@ movies <- movies %>%
 summary(movies)
 ```
 
-## Exploring predictor variables
+### 2.5.4. Exploring predictor variables
+
+#### 2.5.4.1. Exploring continuos variables
+
+```{r}
+movies %>% 
+  select(runtime, imdb_rating, critics_score, audience_score) %>%
+    pairs(movies, col = "dodgerblue")
+```
+
+
+```{r}
+movies %>% 
+  select(runtime, imdb_rating, critics_score, audience_score) %>%
+    cor()
+```
+
+```{r}
+ggplot(data = movies, aes(x = critics_score, y = imdb_num_votes)) +
+  geom_point()
+```
+
+```{r}
+ggplot(data = movies, aes(x = audience_score, y = imdb_num_votes)) +
+  geom_point()
+```
 
 ### Analyze runtime
 
@@ -111,54 +184,15 @@ post_x <- rnorm(post_mu, sigma**2)
 quantile(post_x, c(0.025, 0.975))
 ```
 
+#### Normal-Gamma conjugate family
 
-Hyperparameters
+Prior distribution
 ```{r}
-S <- 10000
+m_0 <- 
+n_0 <- 0
+v_0 <- n_0 - 1
+s2_0 <- 0
 ```
-
-### No Prior information
-
-```{r}
-# Observations
-Y_mean <- mean(movies$runtime)
-n <- length(movies$runtime)
-s2 <- var(movies$runtime)
-```
-
-#### Calculate posterior distribution
-Morte Carlo simulation
-```{r}
-phi <- rgamma(S, (n - 1)/2, s2*(n - 1)/2)
-```
-
-```{r}
-sigma <- 1/sqrt(phi)
-post_mu <- rnorm(S, Y_mean, sigma/sqrt(n))
-```
-
-#### Calculate posterior predictive distribution
-
-```{r}
-pred_y <- rnorm(S, post_mu, sigma)
-```
-
-```{r}
-quantile(pred_y, c(0.025,0.975))
-```
-
-```{r}
-df <- data.frame(pred_y = sort(pred_y))
-
-ggplot(data = df, aes(x = pred_y)) +
-  geom_histogram()
-```
-
-```{r}
-
-```
-
-
 
 
 
