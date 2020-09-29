@@ -14,27 +14,28 @@ output: html_document
 * 2.3. Data Requirements
 * 2.4. Data Collection
 * 2.5. Data Understanding (exploratory data analysis)
+* 2.6. Modeling
 
-#### 3. Results
+#### 3. Prediction
 #### 4. Conclusions
 #### 5. References
 
 # 1. Introduction
-This is a project to apply Bayesian skills in order to keep learning about Bayesian Statistics.
+This is a project is to apply Bayesian skills in order to keep learning about Bayesian Statistics.
 
-For this project I will use a data about movies.
+This project is based on final project of Coursera Bayesian Statistics course, so, I will use some of its recommendations about selection predictor variables.
+
+https://www.coursera.org/learn/bayesian/supplement/VuNpl/project-information
 
 # 2. Methodology
 
 ## 2.1. Business Understanding
 The first question to should be answered is: Does the business want to reduce costs or increase profitability? In this case, they want to increase profitability.
 
-Answered the question, the next step is how to achieve this goal. So, I will define the objetive of this project: understand **what features make popular a movie**.
+Answered the question, the next step is how to achieve this goal. So, I will define the objetive of this project: **understand what features make popular a movie**.
 
 ## 2.2. Analytic Approach
-The first thing that I have to do is to identify what is the target variable in order to define what model I will use to solve this problem. In this case, this target variable is not defined for the business, and showing the data there are many candidates.
-
-To make this work easy I will choose "imdb_num_votes", because is easy to understand. More votes, more popular.
+The first thing that I have to do is to identify what is the target variable in order to define what model I will use to solve this problem. In this case, this target variable is **audience score**.
 
 Once identified the target variable, I have to understand what kind of variable is, in this case is a continuos variable. So, a good model to handle it is a **regression model**.
 
@@ -48,13 +49,15 @@ Another questions to response
 * How to read the data? Load all observations in one read, because there are few observations.
 * How to handle missing values? Use statistical method to fill them. Otherwise, these observations should be removed.
 
-## 2.5. Data Understanding (exploratory data analysis)
+Another important to say, this data was collected for information purposes, so, the scope of inference is **generalizability**.
+
+## 2.5. Data Understanding
 
 ```{r}
 # library(statsr)
 library(dplyr)
 library(ggplot2)
-library(faraway)
+#library(faraway)
 ```
 
 ### 2.5.1. Load data
@@ -66,33 +69,22 @@ load('data/movies.Rdata')
 # View(movies)
 ```
 
-### 2.5.2. Select important variables
+### 2.5.2. Data manipulation
+
+I will select variables that are needed fot statistical analysis (Coursera recommendation).
+
 ```{r}
 movies <- movies %>% 
-            select(title_type, genre, runtime, mpaa_rating, thtr_rel_year, thtr_rel_year, thtr_rel_day, dvd_rel_year,
-                   dvd_rel_month, dvd_rel_day, imdb_rating, imdb_num_votes, critics_rating, critics_score, audience_score,
-                   audience_rating, best_pic_nom, best_pic_win, best_actor_win, best_actress_win, best_dir_win, top200_box)
+            select(title_type, genre, runtime, mpaa_rating, thtr_rel_year, thtr_rel_month, imdb_rating, imdb_num_votes, 
+                   critics_score, best_pic_nom, best_pic_win, best_actor_win, best_actress_win, best_dir_win, top200_box, audience_score)
 ```
 
 ```{r}
 summary(movies)
 ```
 
-### 2.5.3. Handle missing values
-```{r}
-movies <- movies %>%
-  mutate(dvd_rel_year = ifelse(is.na(dvd_rel_year), 2004, dvd_rel_year))
-```
-
-```{r}
-movies <- movies %>%
-  mutate(dvd_rel_month = ifelse(is.na(dvd_rel_month), 6, dvd_rel_month))
-```
-
-```{r}
-movies <- movies %>%
-  mutate(dvd_rel_day = ifelse(is.na(dvd_rel_day), 15, dvd_rel_day))
-```
+#### 2.5.2.1. Remove missing values
+In this case, I will remove observation with missing values, because there are few and I want to keep this project simple.
 
 ```{r}
 movies <- movies %>%
@@ -103,117 +95,623 @@ movies <- movies %>%
 summary(movies)
 ```
 
-### 2.5.4. Exploring predictor variables
+#### 2.5.2.2. Create new variables
 
-#### 2.5.4.1. Exploring continuos variables
-
+Coursera recommendation.
 ```{r}
-movies %>% 
-  select(runtime, imdb_rating, critics_score, audience_score) %>%
-    pairs(movies, col = "dodgerblue")
+movies <- movies %>%
+  mutate(feature_film = factor(ifelse(title_type == 'Feature Film', 'yes', 'no'), levels = c('yes', 'no')),
+         drama = factor(ifelse(genre == 'Drama', 'yes', 'no'), levels = c('yes', 'no')),
+         mpaa_rating_R = factor(ifelse(mpaa_rating == 'R', 'yes', 'no'), levels = c('yes', 'no')),
+         oscar_season = factor(ifelse(thtr_rel_month == 10 | thtr_rel_month == 11 | thtr_rel_month == 12, 'yes', 'no'), levels = c('yes', 'no')),
+         summer_season = factor(ifelse(thtr_rel_month == 5 | thtr_rel_month == 6 | thtr_rel_month == 7 | thtr_rel_month == 8, 'yes', 'no'), levels = c('yes', 'no')))
 ```
 
+Remove redundant variables: title_type, genre, mpaa_rating and thtr_rel_month.
+```{r}
+movies <- movies %>% 
+            select(feature_film, drama, runtime, mpaa_rating_R, thtr_rel_year, oscar_season, summer_season, imdb_rating, imdb_num_votes, critics_score, best_pic_nom, best_pic_win, best_actor_win, best_actress_win, best_dir_win, top200_box, audience_score)
+```
+
+```{r}
+summary(movies)
+```
+
+### 2.5.3. Exploratory data analysis
+
+Identify types of variables.
+
+Categorical variables:
+
+* feature_film
+* drama
+* mpaa_rating_R
+* thtr_rel_year
+* oscar_season
+* summer_season
+* best_pic_nom
+* best_pic_win
+* best_actor_win
+* best_actress_win
+* best_dir_win
+* top200_box
+
+
+Numerical variables:
+
+* runtime
+* imdb_rating
+* critics_score
+* imdb_num_votes
+
+Target variable: audience_score
+
+
+Explore target variable distribution.
+```{r}
+ggplot(data = movies, aes(x = audience_score)) +
+  geom_histogram(bins = 15) +
+  ggtitle('Audience score distribution')
+```
+
+#### 2.5.3.1. Exploring numeric variables
+
+```{r}
+library('PerformanceAnalytics')
+```
 
 ```{r}
 movies %>% 
-  select(runtime, imdb_rating, critics_score, audience_score) %>%
+  select(imdb_num_votes, runtime, imdb_rating, critics_score, thtr_rel_year, audience_score) %>%
     cor()
 ```
 
 ```{r}
-ggplot(data = movies, aes(x = critics_score, y = imdb_num_votes)) +
-  geom_point()
+movies %>% 
+  select(imdb_num_votes, runtime, imdb_rating, critics_score, thtr_rel_year, audience_score) %>%
+    chart.Correlation(histogram = TRUE)
 ```
 
 ```{r}
-ggplot(data = movies, aes(x = audience_score, y = imdb_num_votes)) +
-  geom_point()
+ggplot(data = movies, aes(x = imdb_num_votes)) +
+  geom_histogram(bins = 15)
 ```
-
-### Analyze runtime
 
 ```{r}
 ggplot(data = movies, aes(x = runtime)) +
-  geom_histogram()
-```
-
-#### Normal-Normal conjugate family
-
-Conditions: know variance
-
-```{r}
-S <- 10000
+  geom_histogram(bins = 15)
 ```
 
 ```{r}
-sigma <- 5.83
+ggplot(data = movies, aes(x = imdb_rating)) +
+  geom_histogram(bins = 15)
 ```
 
-Prior distribution
 ```{r}
-# Prior information
-v_0 <- 90
-t2_0 <- 30.25
-
-# Simulation to get prior distribution
-prior_mu <- rnorm(S, v_0, t2_0)
-quantile(prior_mu, c(0.025, 0.975))
+ggplot(data = movies, aes(x = critics_score)) +
+  geom_histogram(bins = 20)
 ```
 
-Prior predictive distribution
 ```{r}
-prior_x <- rnorm(prior_mu, sigma**2)
-quantile(prior_x, c(0.025, 0.975))
+ggplot(data = movies, aes(x = thtr_rel_year)) +
+  geom_histogram(bins = 15)
 ```
 
-Posterior distribution
 ```{r}
-# Sample information
-n <- length(movies$runtime)
-x_mean <- mean(movies$runtime)
-  
-v_n <- (v_0*sigma**2 + n*x_mean*t2_0) / (sigma**2 + n*t2_0)
-t_n <- sqrt(sigma**2*t2_0/(sigma**2 + n*t2_0))
-post_mu <- rnorm(S, v_n, t_n)
-quantile(post_mu, c(0.025, 0.975))
+ggplot(data = movies, aes(x = audience_score)) +
+  geom_histogram(bins = 15)
 ```
 
-Posterior predictive distribution
+
+Observations:
+
+* Predictors imdb_rating and critics_score have a strong linear correlation each other. So I can remove one of them, because, whichever of them can explain the behavior of the other. However, for the purpose of this project I will not remove any of them.
+
+#### 2.5.3.2. Exploring categorical variables
+
 ```{r}
-post_x <- rnorm(post_mu, sigma**2)
-quantile(post_x, c(0.025, 0.975))
+ggplot(data = movies, aes(x = best_pic_nom, y = audience_score)) +
+  geom_boxplot()
 ```
 
-#### Normal-Gamma conjugate family
-
-Prior distribution
 ```{r}
-m_0 <- 
-n_0 <- 0
-v_0 <- n_0 - 1
-s2_0 <- 0
+ggplot(data = movies, aes(x = best_pic_win, y = audience_score)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = movies, aes(x = best_actor_win, y = audience_score)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = movies, aes(x = best_actress_win, y = audience_score)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = movies, aes(x = best_dir_win, y = audience_score)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = movies, aes(x = top200_box, y = audience_score)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = movies, aes(x = feature_film, y = audience_score)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = movies, aes(x = drama, y = audience_score)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = movies, aes(x = mpaa_rating_R, y = audience_score)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = movies, aes(x = oscar_season, y = audience_score)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = movies, aes(x = summer_season, y = audience_score)) +
+  geom_boxplot()
+```
+
+Observations:
+
+* Predictors like summer_season, mpaa_rating_R and best_actor_win seem not to explain target behavior. For example; if a movie was released in summer season (summer_season variable) will same audience score that a movie was not. However, these variables need a deep analysis to confirm this hypothesis.
+
+## 2.6. Modeling
+```{r}
+library(broom)
+library(BAS)
 ```
 
 
+Regression model:
+$$\text{y}_i = \alpha + \beta_1 \cdot \text{x}_i + \beta_2 \cdot \text{x}_i + ... + \epsilon_i$$
+
+I will use BAS package to calculate estimate parameters centering the variables before calculation in order to that b_0 equal to Y mean.
+
+$$\begin{equation} 
+y_{\text{score}, i} = \beta_0 + \beta_1 (x_{\text{1},i}-\bar{x}_{1}) + \beta_2 (x_{\text{2},i}-\bar{x}_{2}) + ... + \epsilon_i.
+\tag{6.6}
+\end{equation}$$
 
 
 
+To work with linear regression models, it is necessary to meet the following condition: **error** is independent and identically distributed following a normal random distribution with mean zero and constant variance.
+
+$$\epsilon_i \mathrel{\mathop{\sim}\limits^{\rm iid}}\textsf{Normal}(0, \sigma^2)$$
+
+With this condition met, the marginal posterior distributions of each parameter will follow t-student distribution centered at estimate parameter (slope) and scale at standard error calculated by frequentist OLS model, because they are **numerically equivalent**.
+
+$$\beta_j~|~y_1,\cdots,y_n ~\sim ~\textsf{t}(n-p-1,\ \hat{\beta}_j,\ (\text{se}_{\beta_j})^2),\qquad j = 0, 1, \cdots, p.$$
+### 2.6.1. Transforming data
+
+```{r}
+movies = movies %>%
+  mutate(feature_film = factor(ifelse(feature_film == 'yes', 1, 0), levels = c(1, 0)),
+         drama = factor(ifelse(drama == 'yes', 1, 0), levels = c(1, 0)),
+         mpaa_rating_R = factor(ifelse(mpaa_rating_R == 'yes', 1, 0), levels = c(1, 0)),
+         oscar_season = factor(ifelse(oscar_season == 'yes', 1, 0), levels = c(1, 0)),
+         summer_season = factor(ifelse(summer_season == 'yes', 1, 0), levels = c(1, 0)),
+         best_pic_nom = factor(ifelse(best_pic_nom == 'yes', 1, 0), levels = c(1, 0)),
+         best_pic_win = factor(ifelse(best_pic_win == 'yes', 1, 0), levels = c(1, 0)),
+         best_actor_win = factor(ifelse(best_actor_win == 'yes', 1, 0), levels = c(1, 0)),
+         best_actress_win = factor(ifelse(best_actress_win == 'yes', 1, 0), levels = c(1, 0)),
+         best_dir_win = factor(ifelse(best_dir_win == 'yes', 1, 0), levels = c(1, 0)),
+         top200_box = factor(ifelse(top200_box == 'yes', 1, 0), levels = c(1, 0)))
+```
+
+```{r}
+summary(movies)
+```
 
 
+### 2.6.2. Checking conditions
+
+```{r}
+# Use frequentist OLS
+movies.lm = lm(audience_score ~ ., data = movies)
+```
+
+##### Cheking uncorrelated relationship between fitted and residuals.
+```{r}
+movies_aug <- augment(movies.lm)
+
+ggplot(data = movies_aug, aes(x = .fitted, y = .resid)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Fitted values", y = "Residuals")
+```
+
+Cheking normality condition.
+```{r}
+ggplot(data = movies_aug, aes(x = .resid)) +
+  geom_histogram(binwidth = 5) +
+  xlab("Residuals")
+```
+
+```{r}
+ggplot(movies_aug) +
+  geom_qq(aes(sample = .std.resid)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  labs(x = "Theoretical quantiles", y = "Standardized residuals")
+```
+
+Observations:
+
+* Conditions are not met, this is pretty obviuos in correaltion plot.
+
+##### Removing redundant variable
+Exploring variables I could find that removing **imdb_rating**, regression conditions improve. This variable is not critical, and as I said before, this variable is explained by **critics_score**.
+
+```{r}
+# Selecting all variables except imdb_rating
+movies <- movies %>%
+  select(feature_film, drama, runtime, mpaa_rating_R, thtr_rel_year, oscar_season, summer_season, imdb_num_votes, critics_score, best_pic_nom, best_pic_win, best_actor_win, best_actress_win, best_dir_win, top200_box, audience_score)
+```
+
+```{r}
+# Use frequentist OLS
+movies.lm = lm(audience_score ~ ., data = movies)
+```
+
+```{r}
+movies_aug <- augment(movies.lm)
+
+ggplot(data = movies_aug, aes(x = .fitted, y = .resid)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Fitted values", y = "Residuals")
+```
+
+```{r}
+ggplot(data = movies_aug, aes(x = .resid)) +
+  geom_histogram(binwidth = 5) +
+  xlab("Residuals")
+```
+
+```{r}
+ggplot(movies_aug) +
+  geom_qq(aes(sample = .std.resid)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  labs(x = "Theoretical quantiles", y = "Standardized residuals")
+```
+
+##### Removing skewness of imdb_num_votes variable
+
+```{r}
+movies = movies %>%
+  mutate(l_imdb_num_votes = log(imdb_num_votes))
+```
+
+```{r}
+movies.lm = lm(audience_score ~ . - imdb_num_votes, data = movies)
+```
+
+```{r}
+movies_aug <- augment(movies.lm)
+
+ggplot(data = movies_aug, aes(x = .fitted, y = .resid)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Fitted values", y = "Residuals")
+```
+
+```{r}
+# Selecting all variables except imdb_num_votes
+ggplot(data = movies_aug, aes(x = .resid)) +
+  geom_histogram(binwidth = 5) +
+  xlab("Residuals")
+```
+
+```{r}
+ggplot(movies_aug) +
+  geom_qq(aes(sample = .std.resid)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  labs(x = "Theoretical quantiles", y = "Standardized residuals")
+```
+
+```{r}
+# Selecting all variables except imdb_num_votes
+movies <- movies %>%
+  select(feature_film, drama, runtime, mpaa_rating_R, thtr_rel_year, oscar_season, summer_season, l_imdb_num_votes, critics_score, best_pic_nom, best_pic_win, best_actor_win, best_actress_win, best_dir_win, top200_box, audience_score)
+```
 
 
+Observations:
+
+* The best operations that I could do to meet requierements of linear regression were: remove imdb_rating and apply log to imdb_num_votes.
+
+### 2.6.3. Checking outliers
+Using Bayesian method an outlier is greater than `k` standard deviations.
+
+$$P(|\epsilon_j| > k\sigma ~|~\text{data})$$
+
+```{r}
+# Hyperparameters
+n = nrow(movies)
+```
+
+Using a prior probability of 95% that there are no outliers in the sample. I want to find the k standard deviations to say that a point is an outlier.
+```{r}
+# Finding k standard deviations with 95%
+k = qnorm(0.5 + 0.5 * 0.95 ^ (1 / n))
+k
+```
+
+Calculating posterior probabilities of each observation of being an outlier.
+```{r}
+outliers = Bayes.outlier(movies.lm, prior.prob = 0.95)
+```
+
+Calculating how many observations with a probability of 80% or greater of being outliers.
+```{r}
+sum(outliers$prob.outlier >= 0.8)
+```
+
+There are no outliers in this sample.
+
+### 2.6.4. Modeling using reference priors
+In this case, the prior information for the parameters is the **uniform prior**.
+
+$$p(\beta_0,\beta_1,\beta_2,\beta_3,\beta_4~|~\sigma^2) \propto 1$$
+Parameters:
+
+* **prior = 'BIC'**: build a model using reference prior.
+* **modelprior = uniform()**: equal prior probability to all models. 
+* **n.models = 1**: select only one model.
+* **bestmodel = rep(1, 17)**: select a model with all paramters included the intercept.
+
+```{r}
+# Frequentist OLS linear regression
+movies.bas = bas.lm(audience_score ~ ., data = movies, prior = 'BIC', modelprior = uniform(), n.models = 1, bestmodel = rep(1, 17))
+
+movies.coef = coef(movies.bas)
+movies.coef
+```
+
+Observations:
+
+* All predictors have a probability of 1 to be non-zero, because I forced the inclusion.
+* Intercept is numerically equivalent that mean Y (audience_score).
+* All posterior distribution are centered by their estimate parameters.
+
+Credible intervals:
+```{r}
+# Select all predictors exclusing the intercept
+confint(movies.coef, parm = 2:17)
+```
+
+Observations:
+
+* Some predictors have zero in their intervals, that could mean that this model could be resolved removing those predictors.
+
+### 2.6.5. Model selection
+In the previous section, I selected a model randomly. However, this model is not the best, because, some of their predictors seem to be zero. In fact, the number of models is `2^p`, where p is number of predictors.
+
+#### 2.6.5.1. Bayesian Information Criterion (BIC)
+Under this method, the best model will have the smallest BIC. 
+
+BIC penalize models with too many predictors, because they make overtiffing. Therefore, this method will be removing predictor until finding the smallest BIC.
+
+* **prior = 'BIC'**: build a model using reference prior.
+* **modelprior = uniform()**: equal prior probability to all models. 
+```{r}
+movies.BIC = bas.lm(audience_score ~ ., data = movies, prior = 'BIC', modelprior = uniform())
+```
+
+To select the best model I have to select the model with the largest log of marginal likelihood (logmarg).
+$$\text{BIC}\approx -2 \ln(p(\text{data}~|~M)).$$
+
+```{r}
+# Find the index of the model with the largest logmarg
+best = which.max(movies.BIC$logmarg)
+
+# Retreat the index of variables in the best model, with 0 as the index of the intercept
+bestmodel = movies.BIC$which[[best]]
+bestmodel
+```
+
+Create a vector of predictors.
+```{r}
+# Create an indicator vector indicating which variables are used in the best model
+bestgamma = rep(0, movies.BIC$n.vars) 
+
+# Create a 0 vector with the same dimension of the number of variables in the full model
+bestgamma[bestmodel + 1] = 1  
+
+# Change the indicator to 1 where variables are used
+bestgamma
+```
+Under BIC, the best model has the following predictors: **imdb_rating and critics_score**. Where index zero is the intercept.
 
 
+Selecting the best model using the vector calculated before.
+```{r}
+movies.bestBIC = bas.lm(audience_score ~ ., data = movies, prior = 'BIC', modelprior = uniform(), bestmodel = bestgamma, n.models = 1)
 
+# Retreat coefficients information
+movies.coef = coef(movies.bestBIC)
 
+# Retreat bounds of credible intervals
+out = confint(movies.coef)[, 1:2]
 
+# Combine results and construct summary table
+coef.BIC = cbind(movies.coef$postmean, movies.coef$postsd, out)
+names = c("post mean", "post sd", colnames(out))
+colnames(coef.BIC) = names
+coef.BIC
+```
 
+### 2.6.6. Model Uncertainty
+In many cases, there are many models with similar BIC, so, it is necessary to measure their uncertainty in order to be confident selecting the best model. To do that, it is necessary to calculate posterior probability of each model, and compare each model with the best model or null model (only with the intercept).
 
+```{r}
+movies.BIC = bas.lm(audience_score ~ ., data = movies, prior = 'BIC', modelprior = uniform())
+```
 
+```{r}
+plot(movies.BIC, which = 1, add.smooth = F, 
+     ask = F, pch = 16, sub.caption="", caption="")
+abline(a = 0, b = 0, col = "darkgrey", lwd = 2)
+```
 
+```{r}
+round(summary(movies.BIC), 3)
+```
 
+Model 1 has the largest post probability.
 
+##### Calculating marginal posterior inclusion probability (pip)
+This probability tell me how likely a predictor is in the true model (best model).
 
+In this case, imdb_rating variable is mandatory (probability equal to 1).
+```{r}
+print(movies.BIC)
+```
+
+Extract posterior means and standard deviations of the coefficients using BMA.
+```{r}
+coef(movies.BIC)
+```
+
+### 2.6.7. Decision making
+
+#### 2.6.7.1. Using BMA (Bayesian model averaging)
+This method is based on averaging all models using their posterior probabilities, where models with higher posterior probabilities receive higher weights, while models with lower posterior probabilities receive lower weights.
+
+Loss function: square error.
+
+```{r}
+movies.BMA = predict(movies.BIC, estimator = "BMA", se.fit = TRUE)
+variable.names(movies.BMA)
+```
+
+Calculate a 95% credible interval for predicting audience_score
+```{r}
+ci.movies.BMA = confint(movies.BMA, estimator = 'BMA')
+```
+
+Calculate the highest audience_score
+```{r}
+which.max(movies.BMA$fit)
+```
+
+#### 2.6.7.2. Using HPM (Highest probability model)
+The most likely model to have generated the data using a 0-1 loss.
+
+```{r}
+movies.HPM = predict(movies.BIC, estimator = "HPM", se.fit = TRUE)
+variable.names(movies.HPM)
+```
+
+Calculating the posterior probability of this model.
+```{r}
+postprob.HPM = movies.BIC$postprobs[movies.HPM$best]
+postprob.HPM
+```
+
+Calculate a 95% credible interval for predicting audience_score
+```{r}
+ci.movies.HPM = confint(movies.HPM, estimator = 'HPM')
+```
+
+Calculate the highest audience_score
+```{r}
+which.max(movies.HPM$fit)
+```
+
+#### 2.6.7.3. Using MPM (Median probability model)
+This model includes all predictors whose marginal posterior inclusion probabilities are greater than 0.5
+
+```{r}
+movies.MPM = predict(movies.BIC, estimator = "MPM", se.fit = TRUE)
+variable.names(movies.MPM)
+```
+
+Calculate a 95% credible interval for predicting audience_score
+```{r}
+ci.movies.MPM = confint(movies.HPM, estimator = 'MPM')
+```
+
+Calculate the highest audience_score
+```{r}
+which.max(movies.MPM$fit)
+```
+
+#### 2.6.7.4. Using BPM (Best predictive model)
+The best choice is to find the model whose predictions are closet to those given by BMA.
+
+**se.fit = TRUE**: calculate posterior means.
+```{r}
+movies.BPM <- predict(movies.BIC, estimator = "BPM", se.fit = TRUE)
+variable.names(movies.BPM)
+```
+
+Calculate a 95% credible interval for predicting audience_score
+```{r}
+ci.movies.BPM = confint(movies.BPM, estimator = 'BPM')
+```
+
+Calculate the highest audience_score
+```{r}
+which.max(movies.BPM$fit)
+```
+
+# 3. Prediction
+
+```{r}
+# I'M NOT ASHAMED
+feature_film = 1
+drama = 1
+runtime = 212
+mpaa_rating_R = 0
+thtr_rel_year = 2016
+oscar_season = 0
+summer_season = 1
+imdb_num_votes = 3182
+l_imdb_num_votes = log(imdb_num_votes)
+critics_score = 33
+best_pic_nom = 0
+best_pic_win = 0
+best_actor_win = 0
+best_actress_win = 0
+best_dir_win = 0
+top200_box = 1
+
+new_data = data.frame('feature_film' = factor(feature_film), 'drama' = factor(drama), 'runtime' = runtime, 'mpaa_rating_R' = factor(mpaa_rating_R), 'thtr_rel_year' = thtr_rel_year, 'oscar_season' = factor(oscar_season), 'summer_season' = factor(summer_season), 'l_imdb_num_votes' = l_imdb_num_votes, 'critics_score' = critics_score, 'best_pic_nom' = factor(best_pic_nom), 'best_pic_win' = factor(best_pic_win), 'best_actor_win' = factor(best_actor_win), 'best_actress_win' = factor(best_actress_win), 'best_dir_win' = factor(best_dir_win), 'top200_box' = factor(top200_box))
+
+new_data
+```
+
+```{r}
+BMA.new = predict(movies.BIC, newdata = new_data, estimator = 'BMA', se.fit = TRUE, nsim = 10000)
+
+movies.conf.fit.new = confint(BMA.new, parm = "mean")
+movies.conf.pred.new = confint(BMA.new, parm = "pred")
+
+cbind(movies.BMA$fit, movies.conf.fit.new, movies.conf.pred.new)
+```
+
+# 4. Conclusion
+Using Bayesian approach there many options to calculate a linear regression.
+
+# 5. References
+
+Posterior inclusion probability:
+https://stats.stackexchange.com/questions/256962/whats-the-meaning-of-a-posterior-inclusion-probability-in-bayesian/256968
+
+Data transformation: http://www.biostathandbook.com/transformation.html
 
 
 
