@@ -1,0 +1,852 @@
+---
+title: "Peer Assessment II"
+output:
+  html_document: 
+    pandoc_args: [
+      "--number-sections",
+    ]
+---
+
+# Background
+
+As a statistical consultant working for a real estate investment firm, your task is to develop a model to predict the selling price of a given home in Ames, Iowa. Your employer hopes to use this information to help assess whether the asking price of a house is higher or lower than the true value of the house. If the home is undervalued, it may be a good investment for the firm.
+
+# Training Data and relevant packages
+
+In order to better assess the quality of the model you will produce, the data have been randomly divided into three separate pieces: a training data set, a testing data set, and a validation data set. For now we will load the training data set, the others will be loaded and used later.
+
+```{r load, message = FALSE}
+load("ames_train.Rdata")
+```
+
+Use the code block below to load any necessary packages
+
+```{r packages, message = FALSE}
+library(statsr)
+library(dplyr)
+library(BAS)
+library(tibble)
+library(tidyr)
+library(ggplot2)
+```
+
+## Part 1 - Exploratory Data Analysis (EDA)
+
+When you first get your data, it's very tempting to immediately begin fitting models and assessing how they perform.  However, before you begin modeling, it's absolutely essential to explore the structure of the data and the relationships between the variables in the data set.
+
+Do a detailed EDA of the ames_train data set, to learn about the structure of the data and the relationships between the variables in the data set (refer to Introduction to Probability and Data, Week 2, for a reminder about EDA if needed). Your EDA should involve creating and reviewing many plots/graphs and considering the patterns and relationships you see. 
+
+After you have explored completely, submit the three graphs/plots that you found most informative during your EDA process, and briefly explain what you learned from each (why you found each informative).
+
+* * *
+
+NOTE: Write your written response to part 1 here. Delete this note before you submit your work.
+
+```{r creategraphs}
+summary(ames_train)
+```
+
+```{r}
+head(ames_train)
+```
+
+Identifying variables
+
+Categorical variables:
+
+* MS.SubClass (discrete)
+* MS.Zoning
+* Street
+* Alley
+* Lot.Shape
+* Land.Contour
+* Utilities
+* Lot.Config
+* Land.Slope
+* Neighborhood
+* Condition.1
+* Condition.2
+* Bldg.Type
+* House.Style
+* Overall.Qual
+* Overall.Cond
+* Roof.Style
+* Roof.Matl
+* Exterior.1st
+* Exterior.2nd
+* Mas.Vnr.Type
+* Exter.Qual
+* Exter.Cond
+* Foundation
+* Bsmt.Qual
+* Bsmt.Cond
+* Bsmt.Exposure
+* BsmtFin.Type.1
+* BsmtFin.Type.2
+* Heating
+* Heating.QC
+* Central.Air
+* Electrical
+* Bsmt.Full.Bath
+* Bsmt.Half.Bath
+* Full.Bath
+* Half.Bath
+* Bedroom.AbvGr
+* Kitchen.AbvGr
+* Kitchen.Qual
+* TotRms.AbvGrd
+* Functional
+* Fireplaces
+* Fireplace.Qu
+* Garage.Type
+* Garage.Finish
+* Garage.Cars
+* Garage.Qual
+* Garage.Cond
+* Paved.Drive
+* Pool.QC
+* Fence
+* Misc.Feature
+* Mo.Sold
+* Sale.Type
+* Sale.Condition
+
+**Numerical variable:**
+
+* area
+* Lot.Frontage
+* Lot.Area
+* Year.Built
+* Year.Remod.Add
+* Mas.Vnr.Area
+* BsmtFin.SF.1
+* BsmtFin.SF.2
+* Bsmt.Unf.SF
+* Total.Bsmt.SF
+* X1st.Flr.SF
+* X2nd.Flr.SF
+* Low.Qual.Fin.SF
+* Garage.Yr.Blt
+* Garage.Area
+* Wood.Deck.SF
+* Open.Porch.SF
+* Enclosed.Porch
+* X3Ssn.Porch
+* Screen.Porch
+* Pool.Area
+* Misc.Val
+* Yr.Sold
+
+**Target variable**
+* price
+
+**Evaluating missing values**
+
+```{r}
+# calculating missing values
+sapply(ames_train, function(x) sum(is.na(x)))
+```
+
+**Handling missing values**
+
+```{r}
+summarise.1 = ames_train %>%
+  filter(!is.na(Lot.Frontage)) %>%
+  summarise(mean = mean(Lot.Frontage), median = median(Lot.Frontage))
+
+# Fill missing value with the median (just for simplicity)
+ames_train = ames_train %>%
+  mutate(Lot.Frontage = ifelse(is.na(Lot.Frontage), summarise.1$median, Lot.Frontage))
+```
+
+```{r}
+# Fill missing value with Na (No alley access)
+ames_train = ames_train %>%
+  mutate(Alley = ifelse(is.na(Alley), 'Na', Alley))
+```
+
+```{r}
+summarise.1 = ames_train %>%
+  filter(!is.na(Mas.Vnr.Area)) %>%
+  summarise(mean = mean(Mas.Vnr.Area), median = median(Mas.Vnr.Area))
+
+# Fill missing value with the mean
+ames_train = ames_train %>%
+  mutate(Mas.Vnr.Area = ifelse(is.na(Mas.Vnr.Area), summarise.1$mean, Mas.Vnr.Area))
+```
+
+```{r}
+# Fill missing value with Na (No basement)
+ames_train = ames_train %>%
+  mutate(Bsmt.Qual = ifelse(is.na(Bsmt.Qual), 'Na', Bsmt.Qual))
+
+ames_train = ames_train %>%
+  mutate(Bsmt.Cond = ifelse(is.na(Bsmt.Cond), 'Na', Bsmt.Cond))
+
+ames_train = ames_train %>%
+  mutate(Bsmt.Exposure = ifelse(is.na(Bsmt.Exposure), 'Na', Bsmt.Exposure))
+
+ames_train = ames_train %>%
+  mutate(BsmtFin.Type.1 = ifelse(is.na(BsmtFin.Type.1), 'Na', BsmtFin.Type.1))
+
+ames_train = ames_train %>%
+  mutate(BsmtFin.Type.2 = ifelse(is.na(BsmtFin.Type.2), 'Na', BsmtFin.Type.2))
+```
+
+```{r}
+summarise.1 = ames_train %>%
+  filter(!is.na(BsmtFin.SF.1)) %>%
+  summarise(mean = mean(BsmtFin.SF.1), median = median(BsmtFin.SF.1))
+
+# Fill missing value with the median (just for simplicity)
+ames_train = ames_train %>%
+  mutate(BsmtFin.SF.1 = ifelse(is.na(BsmtFin.SF.1), summarise.1$median, BsmtFin.SF.1))
+
+
+summarise.1 = ames_train %>%
+  filter(!is.na(BsmtFin.SF.2)) %>%
+  summarise(mean = mean(BsmtFin.SF.2), median = median(BsmtFin.SF.2))
+
+# Fill missing value with the median (just for simplicity)
+ames_train = ames_train %>%
+  mutate(BsmtFin.SF.2 = ifelse(is.na(BsmtFin.SF.2), summarise.1$median, BsmtFin.SF.2))
+
+
+summarise.1 = ames_train %>%
+  filter(!is.na(Bsmt.Unf.SF)) %>%
+  summarise(mean = mean(Bsmt.Unf.SF), median = median(Bsmt.Unf.SF))
+
+# Fill missing value with the median (just for simplicity)
+ames_train = ames_train %>%
+  mutate(Bsmt.Unf.SF = ifelse(is.na(Bsmt.Unf.SF), summarise.1$median, Bsmt.Unf.SF))
+
+
+summarise.1 = ames_train %>%
+  filter(!is.na(Total.Bsmt.SF)) %>%
+  summarise(mean = mean(Total.Bsmt.SF), median = median(Total.Bsmt.SF))
+
+# Fill missing value with the median (just for simplicity)
+ames_train = ames_train %>%
+  mutate(Total.Bsmt.SF = ifelse(is.na(Total.Bsmt.SF), summarise.1$median, Total.Bsmt.SF))
+
+summarise.1 = ames_train %>%
+  filter(!is.na(Total.Bsmt.SF)) %>%
+  summarise(mean = mean(Total.Bsmt.SF), median = median(Total.Bsmt.SF))
+
+# Fill missing value with the median (just for simplicity)
+ames_train = ames_train %>%
+  mutate(Total.Bsmt.SF = ifelse(is.na(Total.Bsmt.SF), summarise.1$median, Total.Bsmt.SF))
+
+summarise.1 = ames_train %>%
+  filter(!is.na(Bsmt.Full.Bath)) %>%
+  summarise(mean = mean(Bsmt.Full.Bath), median = median(Bsmt.Full.Bath))
+
+# Fill missing value with the median (just for simplicity)
+ames_train = ames_train %>%
+  mutate(Bsmt.Full.Bath = ifelse(is.na(Bsmt.Full.Bath), summarise.1$median, Bsmt.Full.Bath))
+
+summarise.1 = ames_train %>%
+  filter(!is.na(Bsmt.Half.Bath)) %>%
+  summarise(mean = mean(Bsmt.Half.Bath), median = median(Bsmt.Half.Bath))
+
+# Fill missing value with the median (just for simplicity)
+ames_train = ames_train %>%
+  mutate(Bsmt.Half.Bath = ifelse(is.na(Bsmt.Half.Bath), summarise.1$median, Bsmt.Half.Bath))
+```
+
+```{r}
+ames_train = ames_train %>%
+  mutate(Fireplace.Qu = ifelse(is.na(Fireplace.Qu), 'Na', Fireplace.Qu))
+
+ames_train = ames_train %>%
+  mutate(Garage.Type = ifelse(is.na(Garage.Type), 'Na', Garage.Type))
+```
+
+```{r}
+ames_train = ames_train %>%
+  mutate(Garage.Finish = ifelse(is.na(Garage.Finish), 'Na', Garage.Finish))
+
+ames_train = ames_train %>%
+  mutate(Garage.Qual = ifelse(is.na(Garage.Qual), 'Na', Garage.Qual))
+
+ames_train = ames_train %>%
+  mutate(Garage.Cond = ifelse(is.na(Garage.Cond), 'Na', Garage.Cond))
+
+ames_train = ames_train %>%
+  mutate(Pool.QC = ifelse(is.na(Pool.QC), 'Na', Pool.QC))
+
+ames_train = ames_train %>%
+  mutate(Fence = ifelse(is.na(Fence), 'Na', Fence))
+
+ames_train = ames_train %>%
+  mutate(Misc.Feature = ifelse(is.na(Misc.Feature), 'Na', Misc.Feature))
+```
+
+```{r}
+ames_train = ames_train %>%
+  mutate(Garage.Cars = ifelse(is.na(Garage.Cars), 0, Garage.Cars))
+
+summarise.1 = ames_train %>%
+  filter(!is.na(Garage.Area)) %>%
+  summarise(mean = mean(Garage.Area), median = median(Garage.Area))
+
+# Fill missing value with the median (just for simplicity)
+ames_train = ames_train %>%
+  mutate(Garage.Area = ifelse(is.na(Garage.Area), summarise.1$median, Garage.Area))
+
+summarise.1 = ames_train %>%
+  filter(!is.na(Garage.Yr.Blt)) %>%
+  summarise(mean = mean(Garage.Yr.Blt), median = median(Garage.Yr.Blt))
+
+# Fill missing value with the median (just for simplicity)
+ames_train = ames_train %>%
+  mutate(Garage.Yr.Blt = ifelse(is.na(Garage.Yr.Blt), summarise.1$median, Garage.Yr.Blt))
+```
+
+```{r}
+sapply(ames_train, function(x) sum(is.na(x)))
+```
+
+```{r}
+summary(ames_train)
+```
+
+**Fix categorical features**
+
+Create factor in categorical variables in order to count by category.
+```{r}
+ames_train = ames_train %>%
+  mutate(Alley = factor(ames_train$Alley),
+         Utilities = factor(ames_train$Utilities),
+         Bsmt.Qual = factor(ames_train$Bsmt.Qual),
+         Bsmt.Cond = factor(ames_train$Bsmt.Cond),
+         Bsmt.Exposure = factor(ames_train$Bsmt.Exposure),
+         BsmtFin.Type.1 = factor(ames_train$BsmtFin.Type.1),
+         BsmtFin.Type.2 = factor(ames_train$BsmtFin.Type.2),
+         Fireplace.Qu = factor(ames_train$Fireplace.Qu),
+         Garage.Type = factor(ames_train$Garage.Type),
+         Garage.Finish = factor(ames_train$Garage.Finish),
+         Garage.Qual = factor(ames_train$Garage.Qual),
+         Garage.Cond = factor(ames_train$Garage.Cond),
+         Pool.QC = factor(ames_train$Pool.QC),
+         Fence = factor(ames_train$Fence),
+         Misc.Feature = factor(ames_train$Misc.Feature),
+         Neighborhood = factor(ames_train$Neighborhood)
+         )
+```
+
+**Remove noisy feature**
+
+Remove features that give information, because there are features that are ids (PID) and others that one category is dominant.
+```{r}
+ames_train = subset(ames_train, select = -c(PID, Street, Alley, Utilities, Condition.2, Heating, Roof.Matl, Central.Air, Pool.QC, Misc.Feature))
+```
+
+**Remove invalid observations**
+
+Remove observations without name.
+```{r}
+ames_train = ames_train %>%
+  filter(Mas.Vnr.Type != '')
+
+ames_train = ames_train %>%
+  mutate(Mas.Vnr.Type = factor(Mas.Vnr.Type))
+```
+
+Remove categorical features where not all categories have observations.
+```{r}
+ames_train = subset(ames_train, select = -c(MS.Zoning, Exter.Cond, Foundation, Electrical, Neighborhood))
+```
+
+```{r}
+summary(ames_train)
+```
+
+### Analysing target variables
+
+```{r}
+ggplot(data = ames_train, aes(x = price)) +
+  geom_histogram()
+```
+
+### Analysing categorical variables
+
+```{r}
+ggplot(data = ames_train, aes(x = factor(MS.SubClass), y = price)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = ames_train, aes(x = Lot.Shape, y = price)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(data = ames_train, aes(x = Land.Contour, y = price)) +
+  geom_boxplot()
+```
+
+
+### Analysing numerical variables
+
+```{r}
+correlation = ames_train %>%
+  dplyr::select(price, area, Lot.Frontage, Lot.Area, Year.Built, Year.Remod.Add, Mas.Vnr.Area, BsmtFin.SF.1, BsmtFin.SF.2, Bsmt.Unf.SF, Total.Bsmt.SF, X1st.Flr.SF, X2nd.Flr.SF, Low.Qual.Fin.SF, Garage.Yr.Blt, Garage.Area, Wood.Deck.SF, Open.Porch.SF, Enclosed.Porch, X3Ssn.Porch, Screen.Porch, Pool.Area, Misc.Val, Yr.Sold) %>%
+  cor()
+
+correlation = round(correlation, 2)
+
+correlation %>%
+  as.data.frame() %>%
+  rownames_to_column(var = 'var1') %>%
+  gather(var2, value, -var1) %>%
+  filter(value > 0.7 & value < 1)
+```
+
+```{r}
+ggplot(data = ames_train, aes(x = Garage.Yr.Blt, y = Year.Built)) +
+  geom_point()
+```
+
+```{r}
+ggplot(data = ames_train, aes(x = X1st.Flr.SF, y = Total.Bsmt.SF)) +
+  geom_point()
+```
+
+Observations
+
+* Garage.Yr.Blt and Year.Built variables have a strong linear correlation, so I can use one of them.
+* X1st.Flr.SF and Total.Bsmt.SF variables have a strong linear correlation, so I can use one of them.
+
+Removing Year.Built and Total.Bsmt.SF
+```{r}
+ames_train = subset(ames_train, select = -c(Year.Built, Total.Bsmt.SF))
+```
+
+```{r}
+ggplot(data = ames_train, aes(x = area)) +
+  geom_histogram()
+```
+
+```{r}
+ggplot(data = ames_train, aes(x = Garage.Yr.Blt)) +
+  geom_histogram()
+```
+
+```{r}
+ggplot(data = ames_train, aes(x = X1st.Flr.SF)) +
+  geom_histogram()
+```
+
+* * *
+
+## Part 2 - Development and assessment of an initial model, following a semi-guided process of analysis
+
+### Section 2.1 An Initial Model
+In building a model, it is often useful to start by creating a simple, intuitive initial model based on the results of the exploratory data analysis. (Note: The goal at this stage is **not** to identify the "best" possible model but rather to choose a reasonable and understandable starting point. Later you will expand and revise this model to create your final model.
+
+Based on your EDA, select *at most* 10 predictor variables from “ames_train” and create a linear model for `price` (or a transformed version of price) using those variables. Provide the *R code* and the *summary output table* for your model, a *brief justification* for the variables you have chosen, and a *brief discussion* of the model results in context (focused on the variables that appear to be important predictors and how they relate to sales price).
+
+* * *
+
+Based on EDA, I will use numerical predictors with high correlation with price for initial model.
+
+```{r fit_model}
+initial.model = lm(price ~ area + Garage.Yr.Blt + X1st.Flr.SF, data = ames_train)
+summary(initial.model)
+```
+
+```{r}
+plot(initial.model$residuals ~ initial.model$fitted.values)
+```
+
+```{r}
+hist(initial.model$residuals)
+```
+
+Observations:
+
+* All predictors are statistically significant.
+* R-squared does not look bad, due to it is greater than 0.5. So, these variables are good predictors.
+* Residuals have a nearly normal distribution, but there is a correlation between residuals and fitted values.
+* There is an extreme outlier.
+
+* * *
+
+Applying log transformation to target variable.
+```{r}
+initial.model_l = lm(log(price) ~ area + Garage.Yr.Blt + X1st.Flr.SF, data = ames_train)
+summary(initial.model_l)
+```
+
+```{r}
+plot(initial.model_l$residuals ~ initial.model_l$fitted.values)
+```
+
+```{r}
+hist(initial.model_l$residuals)
+```
+
+Observations:
+
+* Using log transformation improve R-square, but not linear regression conditions for residuals.
+
+### Section 2.2 Model Selection
+
+Now either using `BAS` another stepwise selection procedure choose the "best" model you can, using your initial model as your starting point. Try at least two different model selection methods and compare their results. Do they both arrive at the same model or do they disagree? What do you think this means?
+
+* * *
+**Remove features using p-value**
+```{r}
+library(MASS)
+```
+
+```{r model_select}
+model.full = lm(price ~ ., data = ames_train)
+summary(model.full)
+```
+
+```{r}
+ames_train = subset(ames_train, select = -c(MS.SubClass, House.Style, Year.Remod.Add, Roof.Style, Exterior.1st, Exterior.2nd, Mas.Vnr.Type, Bsmt.Qual, Bsmt.Cond, Bsmt.Exposure, BsmtFin.Type.1, BsmtFin.Type.2, Heating.QC, X1st.Flr.SF, X2nd.Flr.SF, Low.Qual.Fin.SF, Bsmt.Full.Bath, Bsmt.Half.Bath, Full.Bath, Half.Bath, Bedroom.AbvGr, Kitchen.AbvGr, Functional, Fireplace.Qu, Garage.Type, Garage.Yr.Blt, Garage.Finish, Garage.Cars, Garage.Area, Garage.Qual, Garage.Cond))
+```
+
+```{r}
+model.full.2 = lm(price ~ ., data = ames_train)
+summary(model.full.2)
+```
+
+```{r}
+ames_train = subset(ames_train, select = -c(Lot.Config, Fence, Misc.Val, Mo.Sold, Sale.Type))
+```
+
+```{r}
+model.full.3 = lm(price ~ ., data = ames_train)
+summary(model.full.3)
+```
+
+**Remove features using AIC**
+
+```{r}
+model.AIC <- stepAIC(model.full.3, k = 2)
+```
+
+Observations:
+
+* Based on AIC method, the best model has the following features: Open.Porch.SF, Enclosed.Porch, Pool.Area, Screen.Porch, Overall.Cond, Land.Slope, Wood.Deck.SF, Condition.1, Fireplaces, Lot.Area, Land.Contour, Bldg.Type, Mas.Vnr.Area, BsmtFin.SF.2, Bsmt.Unf.SF, Kitchen.Qual, Exter.Qual, Sale.Condition, Overall.Qual, BsmtFin.SF.1, area and price.
+
+* * *
+
+### Section 2.3 Initial Model Residuals
+One way to assess the performance of a model is to examine the model's residuals. In the space below, create a residual plot for your preferred model from above and use it to assess whether your model appears to fit the data well. Comment on any interesting structure in the residual plot (trend, outliers, etc.) and briefly discuss potential implications it may have for your model and inference / prediction you might produce.
+
+* * *
+
+NOTE: Write your written response to section 2.3 here. Delete this note before you submit your work.
+
+```{r model_resid}
+ames_train = ames_train %>%
+  dplyr::select(price, Open.Porch.SF, Enclosed.Porch, Pool.Area, Screen.Porch, Overall.Cond, Land.Slope, Wood.Deck.SF, Condition.1, Fireplaces, Lot.Area, Land.Contour, Bldg.Type, Mas.Vnr.Area, BsmtFin.SF.2, Bsmt.Unf.SF, Kitchen.Qual, Exter.Qual, Sale.Condition, Overall.Qual, BsmtFin.SF.1, area)
+
+head(ames_train)
+```
+
+```{r}
+model.best = lm(price ~ ., data = ames_train)
+summary(model.best)
+```
+
+```{r}
+plot(model.best$residuals ~ model.best$fitted.values)
+```
+
+```{r}
+hist(model.best$residuals)
+```
+Observations:
+
+* Showing residual vs fitted plot, there is no a correlation. But, there an outliers.
+* Showing residual histogram, distribution is right skewed because of outliers. So, a good option is remove this outlier.
+
+```{r}
+idOutlier = which(model.best$residuals == min(model.best$residuals))
+ames_train[idOutlier,]
+```
+
+```{r}
+ames_train = ames_train[-c(idOutlier),]
+```
+
+```{r}
+model.best = lm(price ~ ., data = ames_train)
+```
+
+```{r}
+plot(model.best$residuals ~ model.best$fitted.values)
+```
+
+```{r}
+hist(model.best$residuals)
+```
+
+* * *
+
+### Section 2.4 Initial Model RMSE
+
+You can calculate it directly based on the model output. Be specific about the units of your RMSE (depending on whether you transformed your response variable). The value you report will be more meaningful if it is in the original units (dollars).
+
+* * *
+
+NOTE: Write your written response to section 2.4 here. Delete this note before you submit your work.
+
+```{r model_rmse}
+# Extract Predictions
+predict.best <- predict(model.best, ames_train)
+
+# Extract Residuals
+resid.best <- ames_train$price - predict.best
+
+# Calculate RMSE
+resid.best <- sqrt(mean(resid.best^2))
+resid.best
+```
+
+
+* * *
+
+### Section 2.5 Overfitting 
+
+The process of building a model generally involves starting with an initial model (as you have done above), identifying its shortcomings, and adapting the model accordingly. This process may be repeated several times until the model fits the data reasonably well. However, the model may do well on training data but perform poorly out-of-sample (meaning, on a dataset other than the original training data) because the model is overly-tuned to specifically fit the training data. This is called “overfitting.” To determine whether overfitting is occurring on a model, compare the performance of a model on both in-sample and out-of-sample data sets. To look at performance of your initial model on out-of-sample data, you will use the data set `ames_test`.
+
+```{r loadtest, message = FALSE}
+load("ames_test.Rdata")
+```
+
+```{r}
+ames_test = ames_test %>%
+  dplyr::select(price, Open.Porch.SF, Enclosed.Porch, Pool.Area, Screen.Porch, Overall.Cond, Land.Slope, Wood.Deck.SF, Condition.1, Fireplaces, Lot.Area, Land.Contour, Bldg.Type, Mas.Vnr.Area, BsmtFin.SF.2, Bsmt.Unf.SF, Kitchen.Qual, Exter.Qual, Sale.Condition, Overall.Qual, BsmtFin.SF.1, area)
+
+summary(ames_test)
+```
+
+```{r}
+sapply(ames_test, function(x) sum(is.na(x)))
+```
+
+```{r}
+summarise.1 = ames_test %>%
+  filter(!is.na(Mas.Vnr.Area)) %>%
+  summarise(mean = mean(Mas.Vnr.Area), median = median(Mas.Vnr.Area))
+
+ames_test = ames_test %>%
+  mutate(Mas.Vnr.Area = ifelse(is.na(Mas.Vnr.Area), summarise.1$median, Mas.Vnr.Area))
+```
+
+```{r}
+sapply(ames_test, function(x) sum(is.na(x)))
+```
+
+Use your model from above to generate predictions for the housing prices in the test data set.  Are the predictions significantly more accurate (compared to the actual sales prices) for the training data than the test data?  Why or why not? Briefly explain how you determined that (what steps or processes did you use)?
+
+* * *
+
+NOTE: Write your written response to section 2.5 here. Delete this note before you submit your work.
+
+```{r initmodel_test}
+# Extract Predictions
+predict.test <- predict(model.best, ames_test)
+
+resid.test <- ames_test$price - predict.test
+
+# Calculate RMSE
+resid.best <- sqrt(mean(resid.test^2))
+resid.best
+```
+
+Observations:
+
+* RMSE for training is greater than testing, so there is no overfitting. In fact, both RMSE are similar, so I ca say that this model is good.
+
+* * *
+
+**Note to the learner:** If in real-life practice this out-of-sample analysis shows evidence that the training data fits your model a lot better than the test data, it is probably a good idea to go back and revise the model (usually by simplifying the model) to reduce this overfitting. For simplicity, we do not ask you to do this on the assignment, however.
+
+## Part 3 Development of a Final Model
+
+Now that you have developed an initial model to use as a baseline, create a final model with *at most* 20 variables to predict housing prices in Ames, IA, selecting from the full array of variables in the dataset and using any of the tools that we introduced in this specialization.  
+
+Carefully document the process that you used to come up with your final model, so that you can answer the questions below.
+
+### Section 3.1 Final Model
+
+Provide the summary table for your model.
+
+* * *
+
+NOTE: Write your written response to section 3.1 here. Delete this note before you submit your work.
+
+
+```{r model_playground}
+model.final = lm(price ~ ., data = ames_train)
+summary(model.final)
+```
+
+```{r}
+hist(model.final$residuals)
+```
+
+
+* * *
+
+### Section 3.2 Transformation
+
+Did you decide to transform any variables?  Why or why not? Explain in a few sentences.
+
+There are no transformation, because the variables selected fit well and meet the linear regression assumtions.
+
+* * *
+
+NOTE: Write your written response to section 3.2 here. Delete this note before you submit your work.
+
+```{r model_assess}
+```
+
+* * *
+
+### Section 3.3 Variable Interaction
+
+Did you decide to include any variable interactions? Why or why not? Explain in a few sentences.
+
+* * *
+
+NOTE: Write your written response to section 3.3 here. Delete this note before you submit your work.
+
+```{r model_inter}
+```
+
+* * *
+
+### Section 3.4 Variable Selection
+
+What method did you use to select the variables you included? Why did you select the method you used? Explain in a few sentences.
+
+I used p-value and AIC methods.
+
+* * *
+
+NOTE: Write your written response to section 3.4 here. Delete this note before you submit your work.
+
+```{r model_select}
+```
+
+* * *
+
+### Section 3.5 Model Testing
+
+How did testing the model on out-of-sample data affect whether or how you changed your model? Explain in a few sentences.
+
+There were no overfitting.
+
+* * *
+
+NOTE: Write your written response to section 3.5 here. Delete this note before you submit your work.
+
+```{r model_testing}
+```
+
+* * *
+
+## Part 4 Final Model Assessment
+
+### Section 4.1 Final Model Residual
+
+For your final model, create and briefly interpret an informative plot of the residuals.
+
+* * *
+
+NOTE: Write your written response to section 4.1 here. Delete this note before you submit your work.
+
+* * *
+
+### Section 4.2 Final Model RMSE
+
+For your final model, calculate and briefly comment on the RMSE.
+
+* * *
+
+NOTE: Write your written response to section 4.2 here. Delete this note before you submit your work.
+
+* * *
+
+### Section 4.3 Final Model Evaluation
+
+What are some strengths and weaknesses of your model?
+
+* * *
+
+NOTE: Write your written response to section 4.3 here. Delete this note before you submit your work.
+
+* * *
+
+### Section 4.4 Final Model Validation
+
+Testing your final model on a separate, validation data set is a great way to determine how your model will perform in real-life practice. 
+
+You will use the “ames_validation” dataset to do some additional assessment of your final model. Discuss your findings, be sure to mention:
+* What is the RMSE of your final model when applied to the validation data?  
+* How does this value compare to that of the training data and/or testing data?
+* What percentage of the 95% predictive confidence (or credible) intervals contain the true price of the house in the validation data set?  
+* From this result, does your final model properly reflect uncertainty?
+
+```{r loadvalidation, message = FALSE}
+load("ames_validation.Rdata")
+```
+
+```{r}
+ames_validation = ames_validation %>%
+  dplyr::select(price, Open.Porch.SF, Enclosed.Porch, Pool.Area, Screen.Porch, Overall.Cond, Land.Slope, Wood.Deck.SF, Condition.1, Fireplaces, Lot.Area, Land.Contour, Bldg.Type, Mas.Vnr.Area, BsmtFin.SF.2, Bsmt.Unf.SF, Kitchen.Qual, Exter.Qual, Sale.Condition, Overall.Qual, BsmtFin.SF.1, area)
+```
+
+```{r}
+summary(ames_validation)
+```
+
+
+```{r}
+sapply(ames_validation, function(x) sum(is.na(x)))
+```
+
+```{r}
+summarise.1 = ames_validation %>%
+  filter(!is.na(Mas.Vnr.Area)) %>%
+  summarise(mean = mean(Mas.Vnr.Area), median = median(Mas.Vnr.Area))
+
+ames_validation = ames_validation %>%
+  mutate(Mas.Vnr.Area = ifelse(is.na(Mas.Vnr.Area), summarise.1$median, Mas.Vnr.Area))
+```
+
+* * *
+
+NOTE: Write your written response to section 4.4 here. Delete this note before you submit your work.
+
+```{r model_validate}
+# Extract Predictions
+predict.validation <- predict(model.best, ames_validation)
+
+resid.validation <- ames_validation$price - predict.validation
+
+# Calculate RMSE
+resid.validation <- sqrt(mean(resid.validation^2))
+resid.validation
+```
+
+* * *
+
+## Part 5 Conclusion
+
+Provide a brief summary of your results, and a brief discussion of what you have learned about the data and your model. 
+
+* * *
+
+In conclusion, to do a good model it is necessary understand the data using EDA. The hard work is in preprocessing data.
+
+* * *

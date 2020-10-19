@@ -1,0 +1,268 @@
+---
+title: "Peer Assessment I"
+output:
+  html_document: 
+    pandoc_args: [
+      "--number-sections",
+    ]
+---
+
+
+First, let us load the data and necessary packages:
+
+```{r load, message = FALSE}
+load("ames_train.Rdata")
+library(MASS)
+library(dplyr)
+library(ggplot2)
+library(Metrics)
+```
+
+```{r}
+summary(ames_train)
+```
+
+
+
+#
+Make a labeled histogram (with 30 bins) of the ages of the houses in the data set, and describe the distribution.
+
+
+```{r Q1}
+# type your code for Question 1 here, and Knit
+ames_train = ames_train %>%
+  mutate('Age.House' = as.integer(format(Sys.Date(), '%Y')) - Year.Built)
+
+
+ggplot(data = ames_train, aes(x = Age.House)) +
+  geom_histogram(bins = 30)
+```
+
+* * *
+
+Fisrt, I calculated the age of each house as the difference between actual year and Year.Built.
+
+The distribution of age houses is right skewed, so that means there are more new houses than old ones.
+
+* * *
+
+
+#
+The mantra in real estate is "Location, Location, Location!" Make a graphical display that relates a home price to its neighborhood in Ames, Iowa. Which summary statistics are most appropriate to use for determining the most expensive, least expensive, and most heterogeneous (having the most variation in housing price) neighborhoods? Report which neighborhoods these are based on the summary statistics of your choice. Report the value of your chosen summary statistics for these neighborhoods.
+
+
+```{r Q2}
+# type your code for Question 2 here, and Knit
+ames_sum_price = ames_train %>%
+  group_by(Neighborhood) %>%
+  summarise(mean = mean(price), sd = sd(price), max = max(price), min = min(price))
+
+ames_sum_price
+```
+
+```{r}
+ames_sum_price %>%
+  filter(max == max(ames_sum_price$max))
+```
+
+```{r}
+ames_sum_price %>%
+  filter(min == min(ames_sum_price$min))
+```
+
+```{r}
+ames_sum_price %>%
+  filter(sd == max(ames_sum_price$sd))
+```
+
+
+* * *
+
+The most expensive houses are in NridgHt.
+
+The cheapest houses are in OldTown.
+
+The most variation in housing price is in StoneBr.
+
+* * *
+
+# 
+
+Which variable has the largest number of missing values? Explain why it makes sense that there are so many missing values for this variable.
+
+```{r Q3}
+# type your code for Question 3 here, and Knit
+sapply(ames_train, function(x) sum(is.na(x)))
+```
+
+
+* * *
+
+The variable with the largest number of missing values is **Pool.QC**. This means that most houses do not have pool.
+
+
+* * *
+
+#
+
+We want to predict the natural log of the home prices. Candidate explanatory variables are lot size in square feet (Lot.Area), slope of property (Land.Slope), original construction date (Year.Built), remodel date (Year.Remod.Add), and the number of bedrooms above grade (Bedroom.AbvGr). Pick a model selection or model averaging method covered in the Specialization, and describe how this method works. Then, use this method to find the best multiple regression model for predicting the natural log of the home prices.
+
+
+```{r Q4}
+# type your code for Question 4 here, and Knit
+ames_train = ames_train %>%
+  mutate(l_price = log(price))
+
+ames_train.4 = ames_train %>%
+  select(l_price, Lot.Area, Land.Slope, Year.Built, Year.Remod.Add, Bedroom.AbvGr)
+
+ames_train.4 %>%
+  summary()
+```
+
+```{r}
+ames_train.4 %>%
+  select(l_price, Lot.Area, Year.Built, Year.Remod.Add, Bedroom.AbvGr) %>%
+  cor()
+```
+
+
+```{r}
+lm.full.4 = lm(l_price ~ ., data = ames_train.4)
+summary(lm.full.4)
+```
+
+```{r}
+plot(lm.full.4$residuals ~ lm.full.4$fitted.values)
+```
+
+```{r}
+hist(lm.full.4$residuals)
+```
+
+
+* * *
+
+In this case, I applied model selection based on **Adjusted R-Squared**, and after showing the results the besst model is which has all predictors (highest Adjusted R-Squared).
+
+Analyzing p-value predictors, all predictors are significance.
+
+
+* * *
+
+#
+
+Which home has the largest squared residual in the previous analysis (Question 4)? Looking at all the variables in the data set, can you explain why this home stands out from the rest (what factors contribute to the high squared residual and why are those factors relevant)?
+
+
+```{r Q5}
+# type your code for Question 5 here, and Knit
+max.out.index = which(lm.full.4$residuals == max(lm.full.4$residuals))
+ames_train.4[max.out.index,]
+```
+
+```{r}
+q1 = quantile(lm.full.4$residuals, 0.25)[[1]]
+q3 = quantile(lm.full.4$residuals, 0.75)[[1]]
+factor = 1.5
+
+iqr = q3 - q1
+max.value = q3 + factor*iqr
+min.value = q1 - factor*iqr
+
+quantile(lm.full.4$residuals, c(0.25, 0.75))
+```
+
+```{r}
+index.no.outliers = which(lm.full.4$residuals > min.value & lm.full.4$residuals < max.value)
+ames_train.4.no.out = ames_train.4[index.no.outliers, ]
+summary(ames_train.4.no.out)
+```
+
+```{r}
+ames_train.4.no.out %>%
+  filter(l_price > 13 & l_price < 13.5)
+```
+
+```{r}
+ames_train.4.no.out %>%
+  filter(Land.Slope == 'Mod' & Bedroom.AbvGr == 1)
+```
+
+* * *
+
+Based on the regression results, the predictor Bedroom.AbvGr has the highest impact (slope = 8.686e-02), and analizing prices, houses with more than 2 bedroom has the highest prices.
+
+
+* * *
+
+#
+
+Use the same model selection method you chose in Question 4 to again find the best multiple regression model to predict the natural log of home prices, but this time **replacing Lot.Area with log(Lot.Area)**. Do you arrive at a model including the same set of predictors?
+
+
+```{r Q6}
+# type your code for Question 6 here, and Knit
+ames_train = ames_train %>%
+  mutate(l_Lot.Area = log(Lot.Area))
+
+ames_train.5 = ames_train %>%
+  select(l_price, l_Lot.Area, Land.Slope, Year.Built, Year.Remod.Add, Bedroom.AbvGr)
+
+ames_train.5 %>%
+  summary()
+```
+
+```{r}
+lm.full.5 = lm(l_price ~ ., data = ames_train.5)
+summary(lm.full.5)
+```
+
+Using log(Lot.Area) I had a model with a higher Adjusted R-Square.
+
+* * *
+
+#
+
+Do you think it is better to log transform Lot.Area, in terms of assumptions for linear regression? Make graphs of the predicted values of log home price versus the true values of log home price for the regression models selected for Lot.Area and log(Lot.Area). Referencing these two plots, provide a written support that includes a quantitative justification for your answer in the first part of question 7.
+
+```{r Q7}
+# type your code for Question 7 here, and Knit
+test.data.5 = ames_train.5 %>%
+  select(l_Lot.Area, Land.Slope, Year.Built, Year.Remod.Add, Bedroom.AbvGr)
+
+y.pred.5 = predict(lm.full.5, test.data.5)
+```
+
+```{r}
+test.data.4 = ames_train.4 %>%
+  select(Lot.Area, Land.Slope, Year.Built, Year.Remod.Add, Bedroom.AbvGr)
+
+y.pred.4 = predict(lm.full.4, test.data.4)
+```
+
+```{r}
+plot(ames_train.5$l_price, y.pred.5)
+```
+
+```{r}
+mse(ames_train.5$l_price, y.pred.5)
+```
+
+
+```{r}
+plot(ames_train.4$l_price, y.pred.4)
+```
+
+```{r}
+mse(ames_train.4$l_price, y.pred.4)
+```
+
+
+* * *
+
+The best model is which uses Lot.Are as predictor, because has the lowest mean square error.
+
+
+* * *
+###
