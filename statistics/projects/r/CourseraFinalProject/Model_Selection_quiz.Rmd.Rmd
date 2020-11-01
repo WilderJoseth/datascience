@@ -35,7 +35,7 @@ load("ames_train.Rdata")
 ```{r Q1}
 # type your code for Question 1 here, and Knit
 ames_train.1 = ames_train %>%
-  select(price, area, Lot.Area, Bedroom.AbvGr, Overall.Qual, Land.Slope)
+  dplyr::select(price, area, Lot.Area, Bedroom.AbvGr, Overall.Qual, Land.Slope)
 
 ames_train.1 = ames_train.1 %>%
   mutate(l_price = log(price),
@@ -101,7 +101,7 @@ Interpret the estimate for a slope (say $$b_1$$) as "All else held constant, for
 ```{r Q3}
 # type your code for Question 3 here, and Knit
 ames_train.2 = ames_train %>%
-  select(price, area, Neighborhood)
+  dplyr::select(price, area, Neighborhood)
 
 ames_train.2 = ames_train.2 %>%
   mutate(l_price = log(price),
@@ -163,7 +163,7 @@ Examine the residuals of a linear model.
 ```{r Q5}
 # type your code for Question 5 here, and Knit
 ames_train.3 = ames_train %>%
-  select(price, Overall.Qual, Bsmt.Qual, Garage.Qual)
+  dplyr::select(price, Overall.Qual, Bsmt.Qual, Garage.Qual)
 
 ames_train.3 = ames_train.3 %>%
   mutate(l_price = log(price))
@@ -214,7 +214,7 @@ Check the assumptions of a linear model.
 ```{r Q7}
 # type your code for Question 7 here, and Knit
 ames_train.3 = ames_train %>%
-  select(price, Overall.Qual, Overall.Cond, MS.SubClass)
+  dplyr::select(price, Overall.Qual, Overall.Cond, MS.SubClass)
 
 ames_train.3 = ames_train.3 %>%
   mutate(l_price = log(price))
@@ -285,7 +285,7 @@ Identify outliers and high leverage points in a linear model.
 ```{r Q9}
 # type your code for Question 9 here, and Knit
 ames_train.4 = ames_train %>%
-  select(price, Bedroom.AbvGr)
+  dplyr::select(price, Bedroom.AbvGr)
 
 ames_train.4 = ames_train.4 %>%
   mutate(l_price = log(price))
@@ -381,7 +381,7 @@ Use R commands to effectively manipulate data.
 # type your code for Question 12 here, and Knit
 ames_train.2.normal = ames_train %>%
   filter(!(Sale.Condition == 'Abnorml' | Sale.Condition == 'Partial')) %>%
-  select(price, area, Neighborhood)
+  dplyr::select(price, area, Neighborhood)
 
 ames_train.2.normal = ames_train.2.normal %>%
   mutate(l_price = log(price),

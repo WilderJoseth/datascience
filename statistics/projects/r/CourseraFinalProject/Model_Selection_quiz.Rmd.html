@@ -558,9 +558,16 @@ summary {
 ##     intersect, setdiff, setequal, union</code></pre>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="kw">library</span>(statsr)</a></code></pre></div>
 <pre><code>## Warning: package 'statsr' was built under R version 3.6.3</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="kw">library</span>(MASS)</a></code></pre></div>
+<pre><code>## Warning: package 'MASS' was built under R version 3.6.3</code></pre>
+<pre><code>## 
+## Attaching package: 'MASS'</code></pre>
+<pre><code>## The following object is masked from 'package:dplyr':
+## 
+##     select</code></pre>
 <p>This second quiz will deal with model assumptions, selection, and interpretation. The concepts tested here will prove useful for the final peer assessment, which is much more open-ended.</p>
 <p>First, let us load the data:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="kw">load</span>(<span class="st">&quot;ames_train.Rdata&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="kw">load</span>(<span class="st">&quot;ames_train.Rdata&quot;</span>)</a></code></pre></div>
 <ol style="list-style-type: decimal">
 <li>Suppose you are regressing <span class="math inline">\(\log\)</span>(<code>price</code>) on <span class="math inline">\(\log\)</span>(<code>area</code>), <span class="math inline">\(\log\)</span>(<code>Lot.Area</code>), <code>Bedroom.AbvGr</code>, <code>Overall.Qual</code>, and <code>Land.Slope</code>. Which of the following variables are included with stepwise variable selection using AIC but not BIC? Select all that apply.
 <ol>
@@ -574,23 +581,23 @@ summary {
 <code>Bedroom.AbvGr</code>
 </li>
 <li>
-<strong><code>Overall.Qual</code></strong>
+<code>Overall.Qual</code>
 </li>
 <li>
-<code>Land.Slope</code>
+<strong><code>Land.Slope</code></strong>
 </li>
 </ol></li>
 </ol>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="co"># type your code for Question 1 here, and Knit</span></a>
-<a class="sourceLine" id="cb13-2" data-line-number="2">ames_train<span class="fl">.1</span> =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb13-3" data-line-number="3"><span class="st">  </span><span class="kw">select</span>(price, area, Lot.Area, Bedroom.AbvGr, Overall.Qual, Land.Slope)</a>
-<a class="sourceLine" id="cb13-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb13-5" data-line-number="5">ames_train<span class="fl">.1</span> =<span class="st"> </span>ames_train<span class="fl">.1</span> <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb13-6" data-line-number="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">l_price =</span> <span class="kw">log</span>(price),</a>
-<a class="sourceLine" id="cb13-7" data-line-number="7">         <span class="dt">l_area =</span> <span class="kw">log</span>(area),</a>
-<a class="sourceLine" id="cb13-8" data-line-number="8">         <span class="dt">l_Lot.Area =</span> <span class="kw">log</span>(Lot.Area))</a>
-<a class="sourceLine" id="cb13-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb13-10" data-line-number="10"><span class="kw">summary</span>(ames_train<span class="fl">.1</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="co"># type your code for Question 1 here, and Knit</span></a>
+<a class="sourceLine" id="cb17-2" data-line-number="2">ames_train<span class="fl">.1</span> =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb17-3" data-line-number="3"><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(price, area, Lot.Area, Bedroom.AbvGr, Overall.Qual, Land.Slope)</a>
+<a class="sourceLine" id="cb17-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb17-5" data-line-number="5">ames_train<span class="fl">.1</span> =<span class="st"> </span>ames_train<span class="fl">.1</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb17-6" data-line-number="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">l_price =</span> <span class="kw">log</span>(price),</a>
+<a class="sourceLine" id="cb17-7" data-line-number="7">         <span class="dt">l_area =</span> <span class="kw">log</span>(area),</a>
+<a class="sourceLine" id="cb17-8" data-line-number="8">         <span class="dt">l_Lot.Area =</span> <span class="kw">log</span>(Lot.Area))</a>
+<a class="sourceLine" id="cb17-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb17-10" data-line-number="10"><span class="kw">summary</span>(ames_train<span class="fl">.1</span>)</a></code></pre></div>
 <pre><code>##      price             area         Lot.Area      Bedroom.AbvGr  
 ##  Min.   : 12789   Min.   : 334   Min.   :  1470   Min.   :0.000  
 ##  1st Qu.:129763   1st Qu.:1092   1st Qu.:  7314   1st Qu.:2.000  
@@ -605,63 +612,62 @@ summary {
 ##  Mean   : 6.095              Mean   :12.018   Mean   :7.241   Mean   : 9.092  
 ##  3rd Qu.: 7.000              3rd Qu.:12.269   3rd Qu.:7.464   3rd Qu.: 9.363  
 ##  Max.   :10.000              Max.   :13.329   Max.   :8.450   Max.   :12.280</code></pre>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1">n =<span class="st"> </span><span class="kw">nrow</span>(ames_train<span class="fl">.1</span>)</a>
-<a class="sourceLine" id="cb15-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb15-3" data-line-number="3">ames.lm =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>l_area <span class="op">+</span><span class="st"> </span>l_Lot.Area <span class="op">+</span><span class="st"> </span>Bedroom.AbvGr <span class="op">+</span><span class="st"> </span>Overall.Qual <span class="op">+</span><span class="st"> </span>Land.Slope, <span class="dt">data =</span> ames_train<span class="fl">.1</span>)</a>
-<a class="sourceLine" id="cb15-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb15-5" data-line-number="5"><span class="kw">step</span>(ames.lm, <span class="dt">k =</span> n)</a></code></pre></div>
-<pre><code>## Start:  AIC=3690.54
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1">n =<span class="st"> </span><span class="kw">nrow</span>(ames_train<span class="fl">.1</span>)</a>
+<a class="sourceLine" id="cb19-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb19-3" data-line-number="3">ames.lm =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>l_area <span class="op">+</span><span class="st"> </span>l_Lot.Area <span class="op">+</span><span class="st"> </span>Bedroom.AbvGr <span class="op">+</span><span class="st"> </span>Overall.Qual <span class="op">+</span><span class="st"> </span>Land.Slope, <span class="dt">data =</span> ames_train<span class="fl">.1</span>)</a>
+<a class="sourceLine" id="cb19-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb19-5" data-line-number="5"><span class="kw">stepAIC</span>(ames.lm, <span class="dt">k =</span> <span class="dv">2</span>)</a></code></pre></div>
+<pre><code>## Start:  AIC=-3295.46
 ## l_price ~ l_area + l_Lot.Area + Bedroom.AbvGr + Overall.Qual + 
 ##     Land.Slope
 ## 
-##                 Df Sum of Sq    RSS    AIC
-## - Land.Slope     2    0.4467 36.983 1702.7
-## - Bedroom.AbvGr  1    0.9387 37.475 2715.9
-## - l_Lot.Area     1    4.0542 40.590 2795.8
-## - l_area         1    7.0796 43.616 2867.7
-## - Overall.Qual   1   29.9829 66.519 3289.7
-## &lt;none&gt;                       36.536 3690.5
+##                 Df Sum of Sq    RSS     AIC
+## &lt;none&gt;                       36.536 -3295.5
+## - Land.Slope     2    0.4467 36.983 -3287.3
+## - Bedroom.AbvGr  1    0.9387 37.475 -3272.1
+## - l_Lot.Area     1    4.0542 40.590 -3192.2
+## - l_area         1    7.0796 43.616 -3120.3
+## - Overall.Qual   1   29.9829 66.519 -2698.3</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = l_price ~ l_area + l_Lot.Area + Bedroom.AbvGr + 
+##     Overall.Qual + Land.Slope, data = ames_train.1)
 ## 
-## Step:  AIC=1702.69
+## Coefficients:
+##   (Intercept)         l_area     l_Lot.Area  Bedroom.AbvGr   Overall.Qual  
+##     6.7052956      0.4354868      0.1346261     -0.0482074      0.1750571  
+## Land.SlopeMod  Land.SlopeSev  
+##     0.1198573      0.0002598</code></pre>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" data-line-number="1"><span class="kw">stepAIC</span>(ames.lm, <span class="dt">k =</span> <span class="kw">log</span>(n))</a></code></pre></div>
+<pre><code>## Start:  AIC=-3261.1
+## l_price ~ l_area + l_Lot.Area + Bedroom.AbvGr + Overall.Qual + 
+##     Land.Slope
+## 
+##                 Df Sum of Sq    RSS     AIC
+## - Land.Slope     2    0.4467 36.983 -3262.8
+## &lt;none&gt;                       36.536 -3261.1
+## - Bedroom.AbvGr  1    0.9387 37.475 -3242.6
+## - l_Lot.Area     1    4.0542 40.590 -3162.8
+## - l_area         1    7.0796 43.616 -3090.9
+## - Overall.Qual   1   29.9829 66.519 -2668.8
+## 
+## Step:  AIC=-3262.77
 ## l_price ~ l_area + l_Lot.Area + Bedroom.AbvGr + Overall.Qual
 ## 
 ##                 Df Sum of Sq    RSS     AIC
-## - Bedroom.AbvGr  1    1.1105 38.093  732.28
-## - l_Lot.Area     1    4.5795 41.562  819.43
-## - l_area         1    7.4731 44.456  886.74
-## - Overall.Qual   1   29.6671 66.650 1291.70
-## &lt;none&gt;                       36.983 1702.69
-## 
-## Step:  AIC=732.28
-## l_price ~ l_area + l_Lot.Area + Overall.Qual
-## 
-##                Df Sum of Sq    RSS     AIC
-## - l_Lot.Area    1     4.301 42.394 -160.75
-## - l_area        1     6.869 44.962 -101.94
-## - Overall.Qual  1    40.261 78.354  453.49
-## &lt;none&gt;                      38.093  732.28
-## 
-## Step:  AIC=-160.75
-## l_price ~ l_area + Overall.Qual
-## 
-##                Df Sum of Sq    RSS     AIC
-## - l_area        1    13.132 55.526 -890.90
-## - Overall.Qual  1    37.736 80.130 -524.11
-## &lt;none&gt;                      42.394 -160.75
-## 
-## Step:  AIC=-890.9
-## l_price ~ Overall.Qual
-## 
-##                Df Sum of Sq     RSS     AIC
-## &lt;none&gt;                       55.526 -890.90
-## - Overall.Qual  1     121.2 176.727 -733.15</code></pre>
+## &lt;none&gt;                       36.983 -3262.8
+## - Bedroom.AbvGr  1    1.1105 38.093 -3240.1
+## - l_Lot.Area     1    4.5795 41.562 -3152.9
+## - l_area         1    7.4731 44.456 -3085.6
+## - Overall.Qual   1   29.6671 66.650 -2680.7</code></pre>
 <pre><code>## 
 ## Call:
-## lm(formula = l_price ~ Overall.Qual, data = ames_train.1)
+## lm(formula = l_price ~ l_area + l_Lot.Area + Bedroom.AbvGr + 
+##     Overall.Qual, data = ames_train.1)
 ## 
 ## Coefficients:
-##  (Intercept)  Overall.Qual  
-##      10.5158        0.2465</code></pre>
+##   (Intercept)         l_area     l_Lot.Area  Bedroom.AbvGr   Overall.Qual  
+##       6.62008        0.44543        0.13891       -0.05204        0.17325</code></pre>
 
 <ol start="2" style="list-style-type: decimal">
 <li>When regressing <span class="math inline">\(\log\)</span>(<code>price</code>) on <code>Bedroom.AbvGr</code>, the coefficient for <code>Bedroom.AbvGr</code> is strongly positive. However, once <span class="math inline">\(\log\)</span>(<code>area</code>) is added to the model, the coefficient for <code>Bedroom.AbvGr</code> becomes strongly negative. Which of the following best explains this phenomenon?
@@ -676,9 +682,9 @@ Bedrooms take up proportionally less space in larger houses, which increases pro
 Since the number of bedrooms is a statistically insignificant predictor of housing price, it is unsurprising that the coefficient changes depending on which variables are included.
 </ol></li>
 </ol>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="co"># type your code for Question 2 here, and Knit</span></a>
-<a class="sourceLine" id="cb18-2" data-line-number="2">ames.lm<span class="fl">.1</span> =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>Bedroom.AbvGr, <span class="dt">data =</span> ames_train<span class="fl">.1</span>)</a>
-<a class="sourceLine" id="cb18-3" data-line-number="3"><span class="kw">summary</span>(ames.lm<span class="fl">.1</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1"><span class="co"># type your code for Question 2 here, and Knit</span></a>
+<a class="sourceLine" id="cb25-2" data-line-number="2">ames.lm<span class="fl">.1</span> =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>Bedroom.AbvGr, <span class="dt">data =</span> ames_train<span class="fl">.1</span>)</a>
+<a class="sourceLine" id="cb25-3" data-line-number="3"><span class="kw">summary</span>(ames.lm<span class="fl">.1</span>)</a></code></pre></div>
 <pre><code>## 
 ## Call:
 ## lm(formula = l_price ~ Bedroom.AbvGr, data = ames_train.1)
@@ -697,8 +703,8 @@ Since the number of bedrooms is a statistically insignificant predictor of housi
 ## Residual standard error: 0.4125 on 998 degrees of freedom
 ## Multiple R-squared:  0.03927,    Adjusted R-squared:  0.03831 
 ## F-statistic: 40.79 on 1 and 998 DF,  p-value: 2.588e-10</code></pre>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" data-line-number="1">ames.lm<span class="fl">.2</span> =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>Bedroom.AbvGr <span class="op">+</span><span class="st"> </span>l_area, <span class="dt">data =</span> ames_train<span class="fl">.1</span>)</a>
-<a class="sourceLine" id="cb20-2" data-line-number="2"><span class="kw">summary</span>(ames.lm<span class="fl">.2</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1">ames.lm<span class="fl">.2</span> =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>Bedroom.AbvGr <span class="op">+</span><span class="st"> </span>l_area, <span class="dt">data =</span> ames_train<span class="fl">.1</span>)</a>
+<a class="sourceLine" id="cb27-2" data-line-number="2"><span class="kw">summary</span>(ames.lm<span class="fl">.2</span>)</a></code></pre></div>
 <pre><code>## 
 ## Call:
 ## lm(formula = l_price ~ Bedroom.AbvGr + l_area, data = ames_train.1)
@@ -733,16 +739,16 @@ Since the number of bedrooms is a statistically insignificant predictor of housi
 <code>IDOTRR</code>
 </ol></li>
 </ol>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" data-line-number="1"><span class="co"># type your code for Question 3 here, and Knit</span></a>
-<a class="sourceLine" id="cb22-2" data-line-number="2">ames_train<span class="fl">.2</span> =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb22-3" data-line-number="3"><span class="st">  </span><span class="kw">select</span>(price, area, Neighborhood)</a>
-<a class="sourceLine" id="cb22-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb22-5" data-line-number="5">ames_train<span class="fl">.2</span> =<span class="st"> </span>ames_train<span class="fl">.2</span> <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb22-6" data-line-number="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">l_price =</span> <span class="kw">log</span>(price),</a>
-<a class="sourceLine" id="cb22-7" data-line-number="7">         <span class="dt">l_area =</span> <span class="kw">log</span>(area))</a>
-<a class="sourceLine" id="cb22-8" data-line-number="8"></a>
-<a class="sourceLine" id="cb22-9" data-line-number="9">ames.lm<span class="fl">.2</span> =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>l_area, <span class="dt">data =</span> ames_train<span class="fl">.2</span>)</a>
-<a class="sourceLine" id="cb22-10" data-line-number="10"><span class="kw">summary</span>(ames.lm<span class="fl">.2</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1"><span class="co"># type your code for Question 3 here, and Knit</span></a>
+<a class="sourceLine" id="cb29-2" data-line-number="2">ames_train<span class="fl">.2</span> =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb29-3" data-line-number="3"><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(price, area, Neighborhood)</a>
+<a class="sourceLine" id="cb29-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb29-5" data-line-number="5">ames_train<span class="fl">.2</span> =<span class="st"> </span>ames_train<span class="fl">.2</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb29-6" data-line-number="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">l_price =</span> <span class="kw">log</span>(price),</a>
+<a class="sourceLine" id="cb29-7" data-line-number="7">         <span class="dt">l_area =</span> <span class="kw">log</span>(area))</a>
+<a class="sourceLine" id="cb29-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb29-9" data-line-number="9">ames.lm<span class="fl">.2</span> =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>l_area, <span class="dt">data =</span> ames_train<span class="fl">.2</span>)</a>
+<a class="sourceLine" id="cb29-10" data-line-number="10"><span class="kw">summary</span>(ames.lm<span class="fl">.2</span>)</a></code></pre></div>
 <pre><code>## 
 ## Call:
 ## lm(formula = l_price ~ l_area, data = ames_train.2)
@@ -761,8 +767,8 @@ Since the number of bedrooms is a statistically insignificant predictor of housi
 ## Residual standard error: 0.2834 on 998 degrees of freedom
 ## Multiple R-squared:  0.5466, Adjusted R-squared:  0.5461 
 ## F-statistic:  1203 on 1 and 998 DF,  p-value: &lt; 2.2e-16</code></pre>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" data-line-number="1">ames_train<span class="fl">.2</span><span class="op">$</span>residual =<span class="st"> </span>ames.lm<span class="fl">.2</span><span class="op">$</span>residuals</a>
-<a class="sourceLine" id="cb24-2" data-line-number="2"><span class="kw">head</span>(ames_train<span class="fl">.2</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" data-line-number="1">ames_train<span class="fl">.2</span><span class="op">$</span>residual =<span class="st"> </span>ames.lm<span class="fl">.2</span><span class="op">$</span>residuals</a>
+<a class="sourceLine" id="cb31-2" data-line-number="2"><span class="kw">head</span>(ames_train<span class="fl">.2</span>)</a></code></pre></div>
 <pre><code>## # A tibble: 6 x 6
 ##    price  area Neighborhood l_price l_area residual
 ##    &lt;int&gt; &lt;int&gt; &lt;fct&gt;          &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;
@@ -772,10 +778,10 @@ Since the number of bedrooms is a statistically insignificant predictor of housi
 ## 4 114000  1039 OldTown         11.6   6.95  -0.102 
 ## 5 227000  1665 NWAmes          12.3   7.42   0.152 
 ## 6 198500  1922 Edwards         12.2   7.56  -0.115</code></pre>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" data-line-number="1">ames_train<span class="fl">.2</span> <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb26-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(Neighborhood) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb26-3" data-line-number="3"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">avg.residuals =</span> <span class="kw">mean</span>(residual)) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb26-4" data-line-number="4"><span class="st">  </span><span class="kw">filter</span>(avg.residuals <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(avg.residuals))</a></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" data-line-number="1">ames_train<span class="fl">.2</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb33-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(Neighborhood) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb33-3" data-line-number="3"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">avg.residuals =</span> <span class="kw">mean</span>(residual)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb33-4" data-line-number="4"><span class="st">  </span><span class="kw">filter</span>(avg.residuals <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(avg.residuals))</a></code></pre></div>
 <pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
 <pre><code>## # A tibble: 1 x 2
 ##   Neighborhood avg.residuals
@@ -795,11 +801,11 @@ Since the number of bedrooms is a statistically insignificant predictor of housi
 <code>MeadowV</code>
 </ol></li>
 </ol>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1"><span class="co"># type your code for Question 4 here, and Knit</span></a>
-<a class="sourceLine" id="cb29-2" data-line-number="2">ames_train<span class="fl">.2</span> <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb29-3" data-line-number="3"><span class="st">  </span><span class="kw">group_by</span>(Neighborhood) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb29-4" data-line-number="4"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">avg.residuals =</span> <span class="kw">mean</span>(residual)) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb29-5" data-line-number="5"><span class="st">  </span><span class="kw">filter</span>(avg.residuals <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(avg.residuals))</a></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb36-1" data-line-number="1"><span class="co"># type your code for Question 4 here, and Knit</span></a>
+<a class="sourceLine" id="cb36-2" data-line-number="2">ames_train<span class="fl">.2</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb36-3" data-line-number="3"><span class="st">  </span><span class="kw">group_by</span>(Neighborhood) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb36-4" data-line-number="4"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">avg.residuals =</span> <span class="kw">mean</span>(residual)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb36-5" data-line-number="5"><span class="st">  </span><span class="kw">filter</span>(avg.residuals <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(avg.residuals))</a></code></pre></div>
 <pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
 <pre><code>## # A tibble: 1 x 2
 ##   Neighborhood avg.residuals
@@ -819,14 +825,14 @@ Since the number of bedrooms is a statistically insignificant predictor of housi
 924
 </ol></li>
 </ol>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb32-1" data-line-number="1"><span class="co"># type your code for Question 5 here, and Knit</span></a>
-<a class="sourceLine" id="cb32-2" data-line-number="2">ames_train<span class="fl">.3</span> =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb32-3" data-line-number="3"><span class="st">  </span><span class="kw">select</span>(price, Overall.Qual, Bsmt.Qual, Garage.Qual)</a>
-<a class="sourceLine" id="cb32-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb32-5" data-line-number="5">ames_train<span class="fl">.3</span> =<span class="st"> </span>ames_train<span class="fl">.3</span> <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb32-6" data-line-number="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">l_price =</span> <span class="kw">log</span>(price))</a>
-<a class="sourceLine" id="cb32-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb32-8" data-line-number="8"><span class="kw">summary</span>(ames_train<span class="fl">.3</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb39-1" data-line-number="1"><span class="co"># type your code for Question 5 here, and Knit</span></a>
+<a class="sourceLine" id="cb39-2" data-line-number="2">ames_train<span class="fl">.3</span> =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb39-3" data-line-number="3"><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(price, Overall.Qual, Bsmt.Qual, Garage.Qual)</a>
+<a class="sourceLine" id="cb39-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb39-5" data-line-number="5">ames_train<span class="fl">.3</span> =<span class="st"> </span>ames_train<span class="fl">.3</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb39-6" data-line-number="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">l_price =</span> <span class="kw">log</span>(price))</a>
+<a class="sourceLine" id="cb39-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb39-8" data-line-number="8"><span class="kw">summary</span>(ames_train<span class="fl">.3</span>)</a></code></pre></div>
 <pre><code>##      price         Overall.Qual    Bsmt.Qual  Garage.Qual    l_price      
 ##  Min.   : 12789   Min.   : 1.000       :  1       :  1    Min.   : 9.456  
 ##  1st Qu.:129763   1st Qu.: 5.000   Ex  : 87   Ex  :  1    1st Qu.:11.773  
@@ -835,10 +841,10 @@ Since the number of bedrooms is a statistically insignificant predictor of housi
 ##  3rd Qu.:213000   3rd Qu.: 7.000   Po  :  1   Po  :  3    3rd Qu.:12.269  
 ##  Max.   :615000   Max.   :10.000   TA  :438   TA  :904    Max.   :13.329  
 ##                                    NA's: 21   NA's: 47</code></pre>
-<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb34-1" data-line-number="1"><span class="co"># Look for missing values</span></a>
-<a class="sourceLine" id="cb34-2" data-line-number="2">ames_train<span class="fl">.3</span> <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb34-3" data-line-number="3"><span class="st">  </span><span class="kw">filter</span>(<span class="kw">is.na</span>(Bsmt.Qual) <span class="op">|</span><span class="st"> </span><span class="kw">is.na</span>(Garage.Qual)) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb34-4" data-line-number="4"><span class="st">  </span><span class="kw">nrow</span>()</a></code></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb41-1" data-line-number="1"><span class="co"># Look for missing values</span></a>
+<a class="sourceLine" id="cb41-2" data-line-number="2">ames_train<span class="fl">.3</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb41-3" data-line-number="3"><span class="st">  </span><span class="kw">filter</span>(<span class="kw">is.na</span>(Bsmt.Qual) <span class="op">|</span><span class="st"> </span><span class="kw">is.na</span>(Garage.Qual)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb41-4" data-line-number="4"><span class="st">  </span><span class="kw">nrow</span>()</a></code></pre></div>
 <pre><code>## [1] 64</code></pre>
 
 <ol start="6" style="list-style-type: decimal">
@@ -853,7 +859,7 @@ Recode all <code>NA</code> values as the category <code>TA</code> since we must 
 <strong>Recode all <code>NA</code> values as a separate category, since houses without basements or garages are fundamentally different than houses with both basements and garages.</strong>
 </ol></li>
 </ol>
-<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb36-1" data-line-number="1"><span class="co"># type your code for Question 6 here, and Knit</span></a></code></pre></div>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb43-1" data-line-number="1"><span class="co"># type your code for Question 6 here, and Knit</span></a></code></pre></div>
 
 <ol start="7" style="list-style-type: decimal">
 <li>Run a simple linear model with <span class="math inline">\(\log\)</span>(<code>price</code>) regressed on <code>Overall.Cond</code> and <code>Overall.Qual</code>. Which of the following subclasses of dwellings (<code>MS.SubClass</code>) has the highest median predicted prices?
@@ -868,14 +874,14 @@ Recode all <code>NA</code> values as the category <code>TA</code> since we must 
 090: Duplexes
 </ol></li>
 </ol>
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb37-1" data-line-number="1"><span class="co"># type your code for Question 7 here, and Knit</span></a>
-<a class="sourceLine" id="cb37-2" data-line-number="2">ames_train<span class="fl">.3</span> =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb37-3" data-line-number="3"><span class="st">  </span><span class="kw">select</span>(price, Overall.Qual, Overall.Cond, MS.SubClass)</a>
-<a class="sourceLine" id="cb37-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb37-5" data-line-number="5">ames_train<span class="fl">.3</span> =<span class="st"> </span>ames_train<span class="fl">.3</span> <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb37-6" data-line-number="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">l_price =</span> <span class="kw">log</span>(price))</a>
-<a class="sourceLine" id="cb37-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb37-8" data-line-number="8"><span class="kw">summary</span>(ames_train<span class="fl">.3</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb44-1" data-line-number="1"><span class="co"># type your code for Question 7 here, and Knit</span></a>
+<a class="sourceLine" id="cb44-2" data-line-number="2">ames_train<span class="fl">.3</span> =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb44-3" data-line-number="3"><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(price, Overall.Qual, Overall.Cond, MS.SubClass)</a>
+<a class="sourceLine" id="cb44-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb44-5" data-line-number="5">ames_train<span class="fl">.3</span> =<span class="st"> </span>ames_train<span class="fl">.3</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb44-6" data-line-number="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">l_price =</span> <span class="kw">log</span>(price))</a>
+<a class="sourceLine" id="cb44-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb44-8" data-line-number="8"><span class="kw">summary</span>(ames_train<span class="fl">.3</span>)</a></code></pre></div>
 <pre><code>##      price         Overall.Qual     Overall.Cond    MS.SubClass    
 ##  Min.   : 12789   Min.   : 1.000   Min.   :1.000   Min.   : 20.00  
 ##  1st Qu.:129763   1st Qu.: 5.000   1st Qu.:5.000   1st Qu.: 20.00  
@@ -890,62 +896,7 @@ Recode all <code>NA</code> values as the category <code>TA</code> since we must 
 ##  Mean   :12.018  
 ##  3rd Qu.:12.269  
 ##  Max.   :13.329</code></pre>
-<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb39-1" data-line-number="1">ames.lm<span class="fl">.3</span> =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>Overall.Qual <span class="op">+</span><span class="st"> </span>Overall.Cond, <span class="dt">data =</span> ames_train<span class="fl">.3</span>)</a>
-<a class="sourceLine" id="cb39-2" data-line-number="2"><span class="kw">summary</span>(ames.lm<span class="fl">.3</span>)</a></code></pre></div>
-<pre><code>## 
-## Call:
-## lm(formula = l_price ~ Overall.Qual + Overall.Cond, data = ames_train.3)
-## 
-## Residuals:
-##      Min       1Q   Median       3Q      Max 
-## -1.48660 -0.11976  0.00903  0.13480  0.94720 
-## 
-## Coefficients:
-##               Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  10.413314   0.053860 193.342   &lt;2e-16 ***
-## Overall.Qual  0.248233   0.005316  46.693   &lt;2e-16 ***
-## Overall.Cond  0.016582   0.006892   2.406   0.0163 *  
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## Residual standard error: 0.2353 on 997 degrees of freedom
-## Multiple R-squared:  0.6876, Adjusted R-squared:  0.687 
-## F-statistic:  1097 on 2 and 997 DF,  p-value: &lt; 2.2e-16</code></pre>
-<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb41-1" data-line-number="1">ames_train<span class="fl">.3</span><span class="op">$</span>predicted =<span class="st"> </span>ames.lm<span class="fl">.3</span><span class="op">$</span>fitted.values</a>
-<a class="sourceLine" id="cb41-2" data-line-number="2"><span class="kw">head</span>(ames_train<span class="fl">.3</span>)</a></code></pre></div>
-<pre><code>## # A tibble: 6 x 6
-##    price Overall.Qual Overall.Cond MS.SubClass l_price predicted
-##    &lt;int&gt;        &lt;int&gt;        &lt;int&gt;       &lt;int&gt;   &lt;dbl&gt;     &lt;dbl&gt;
-## 1 126000            6            6          30    11.7      12.0
-## 2 139500            5            5         120    11.8      11.7
-## 3 124900            5            9          30    11.7      11.8
-## 4 114000            4            8          70    11.6      11.5
-## 5 227000            8            6          60    12.3      12.5
-## 6 198500            7            5          85    12.2      12.2</code></pre>
-<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb43-1" data-line-number="1">ames_train<span class="fl">.3</span> <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb43-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(MS.SubClass) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb43-3" data-line-number="3"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">avg.predicted =</span> <span class="kw">mean</span>(predicted)) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb43-4" data-line-number="4"><span class="st">  </span><span class="kw">filter</span>(avg.predicted <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(avg.predicted))</a></code></pre></div>
-<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
-<pre><code>## # A tibble: 1 x 2
-##   MS.SubClass avg.predicted
-##         &lt;int&gt;         &lt;dbl&gt;
-## 1         120          12.3</code></pre>
-
-<ol start="8" style="list-style-type: decimal">
-<li>Using the model from Question 7, which observation has the highest leverage or influence on the regression model? Hint: use <code>hatvalues</code>, <code>hat</code> or <code>lm.influence</code>.
-<ol>
-<li>
-125
-<li>
-<strong>268</strong>
-<li>
-640
-<li>
-832
-</ol></li>
-</ol>
-<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb46-1" data-line-number="1"><span class="co"># type your code for Question 8 here, and Knit</span></a>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb46-1" data-line-number="1">ames.lm<span class="fl">.3</span> =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>Overall.Qual <span class="op">+</span><span class="st"> </span>Overall.Cond, <span class="dt">data =</span> ames_train<span class="fl">.3</span>)</a>
 <a class="sourceLine" id="cb46-2" data-line-number="2"><span class="kw">summary</span>(ames.lm<span class="fl">.3</span>)</a></code></pre></div>
 <pre><code>## 
 ## Call:
@@ -966,9 +917,64 @@ Recode all <code>NA</code> values as the category <code>TA</code> since we must 
 ## Residual standard error: 0.2353 on 997 degrees of freedom
 ## Multiple R-squared:  0.6876, Adjusted R-squared:  0.687 
 ## F-statistic:  1097 on 2 and 997 DF,  p-value: &lt; 2.2e-16</code></pre>
-<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb48-1" data-line-number="1"><span class="kw">plot</span>(ames.lm<span class="fl">.3</span><span class="op">$</span>residuals <span class="op">~</span><span class="st"> </span>ames.lm<span class="fl">.3</span><span class="op">$</span>fitted.values)</a></code></pre></div>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb48-1" data-line-number="1">ames_train<span class="fl">.3</span><span class="op">$</span>predicted =<span class="st"> </span>ames.lm<span class="fl">.3</span><span class="op">$</span>fitted.values</a>
+<a class="sourceLine" id="cb48-2" data-line-number="2"><span class="kw">head</span>(ames_train<span class="fl">.3</span>)</a></code></pre></div>
+<pre><code>## # A tibble: 6 x 6
+##    price Overall.Qual Overall.Cond MS.SubClass l_price predicted
+##    &lt;int&gt;        &lt;int&gt;        &lt;int&gt;       &lt;int&gt;   &lt;dbl&gt;     &lt;dbl&gt;
+## 1 126000            6            6          30    11.7      12.0
+## 2 139500            5            5         120    11.8      11.7
+## 3 124900            5            9          30    11.7      11.8
+## 4 114000            4            8          70    11.6      11.5
+## 5 227000            8            6          60    12.3      12.5
+## 6 198500            7            5          85    12.2      12.2</code></pre>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb50-1" data-line-number="1">ames_train<span class="fl">.3</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb50-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(MS.SubClass) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb50-3" data-line-number="3"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">avg.predicted =</span> <span class="kw">mean</span>(predicted)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb50-4" data-line-number="4"><span class="st">  </span><span class="kw">filter</span>(avg.predicted <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(avg.predicted))</a></code></pre></div>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   MS.SubClass avg.predicted
+##         &lt;int&gt;         &lt;dbl&gt;
+## 1         120          12.3</code></pre>
+
+<ol start="8" style="list-style-type: decimal">
+<li>Using the model from Question 7, which observation has the highest leverage or influence on the regression model? Hint: use <code>hatvalues</code>, <code>hat</code> or <code>lm.influence</code>.
+<ol>
+<li>
+125
+<li>
+<strong>268</strong>
+<li>
+640
+<li>
+832
+</ol></li>
+</ol>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb53-1" data-line-number="1"><span class="co"># type your code for Question 8 here, and Knit</span></a>
+<a class="sourceLine" id="cb53-2" data-line-number="2"><span class="kw">summary</span>(ames.lm<span class="fl">.3</span>)</a></code></pre></div>
+<pre><code>## 
+## Call:
+## lm(formula = l_price ~ Overall.Qual + Overall.Cond, data = ames_train.3)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -1.48660 -0.11976  0.00903  0.13480  0.94720 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  10.413314   0.053860 193.342   &lt;2e-16 ***
+## Overall.Qual  0.248233   0.005316  46.693   &lt;2e-16 ***
+## Overall.Cond  0.016582   0.006892   2.406   0.0163 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.2353 on 997 degrees of freedom
+## Multiple R-squared:  0.6876, Adjusted R-squared:  0.687 
+## F-statistic:  1097 on 2 and 997 DF,  p-value: &lt; 2.2e-16</code></pre>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb55-1" data-line-number="1"><span class="kw">plot</span>(ames.lm<span class="fl">.3</span><span class="op">$</span>residuals <span class="op">~</span><span class="st"> </span>ames.lm<span class="fl">.3</span><span class="op">$</span>fitted.values)</a></code></pre></div>
 <p><img src="data:image/png;base64,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" width="672" /></p>
-<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb49-1" data-line-number="1"><span class="kw">which</span>(<span class="kw">lm.influence</span>(ames.lm<span class="fl">.3</span>)<span class="op">$</span>hat <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(<span class="kw">lm.influence</span>(ames.lm<span class="fl">.3</span>)<span class="op">$</span>hat))</a></code></pre></div>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb56-1" data-line-number="1"><span class="kw">which</span>(<span class="kw">lm.influence</span>(ames.lm<span class="fl">.3</span>)<span class="op">$</span>hat <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(<span class="kw">lm.influence</span>(ames.lm<span class="fl">.3</span>)<span class="op">$</span>hat))</a></code></pre></div>
 <pre><code>## 268 
 ## 268</code></pre>
 
@@ -985,14 +991,14 @@ Holding constant all other variables in the dataset, on average, an additional b
 Holding constant all other variables in the model, on average, an additional bedroom will increase housing price by <span class="math inline">\(k\)</span> dollars.
 </ol></li>
 </ol>
-<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb51-1" data-line-number="1"><span class="co"># type your code for Question 9 here, and Knit</span></a>
-<a class="sourceLine" id="cb51-2" data-line-number="2">ames_train<span class="fl">.4</span> =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb51-3" data-line-number="3"><span class="st">  </span><span class="kw">select</span>(price, Bedroom.AbvGr)</a>
-<a class="sourceLine" id="cb51-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb51-5" data-line-number="5">ames_train<span class="fl">.4</span> =<span class="st"> </span>ames_train<span class="fl">.4</span> <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb51-6" data-line-number="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">l_price =</span> <span class="kw">log</span>(price))</a>
-<a class="sourceLine" id="cb51-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb51-8" data-line-number="8"><span class="kw">summary</span>(ames_train<span class="fl">.4</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb58-1" data-line-number="1"><span class="co"># type your code for Question 9 here, and Knit</span></a>
+<a class="sourceLine" id="cb58-2" data-line-number="2">ames_train<span class="fl">.4</span> =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb58-3" data-line-number="3"><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(price, Bedroom.AbvGr)</a>
+<a class="sourceLine" id="cb58-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb58-5" data-line-number="5">ames_train<span class="fl">.4</span> =<span class="st"> </span>ames_train<span class="fl">.4</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb58-6" data-line-number="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">l_price =</span> <span class="kw">log</span>(price))</a>
+<a class="sourceLine" id="cb58-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb58-8" data-line-number="8"><span class="kw">summary</span>(ames_train<span class="fl">.4</span>)</a></code></pre></div>
 <pre><code>##      price        Bedroom.AbvGr      l_price      
 ##  Min.   : 12789   Min.   :0.000   Min.   : 9.456  
 ##  1st Qu.:129763   1st Qu.:2.000   1st Qu.:11.773  
@@ -1000,8 +1006,8 @@ Holding constant all other variables in the model, on average, an additional bed
 ##  Mean   :181190   Mean   :2.806   Mean   :12.018  
 ##  3rd Qu.:213000   3rd Qu.:3.000   3rd Qu.:12.269  
 ##  Max.   :615000   Max.   :6.000   Max.   :13.329</code></pre>
-<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb53-1" data-line-number="1">ames.lm<span class="fl">.4</span> =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>Bedroom.AbvGr, <span class="dt">data =</span> ames_train<span class="fl">.4</span>)</a>
-<a class="sourceLine" id="cb53-2" data-line-number="2"><span class="kw">summary</span>(ames.lm<span class="fl">.4</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb60-1" data-line-number="1">ames.lm<span class="fl">.4</span> =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>Bedroom.AbvGr, <span class="dt">data =</span> ames_train<span class="fl">.4</span>)</a>
+<a class="sourceLine" id="cb60-2" data-line-number="2"><span class="kw">summary</span>(ames.lm<span class="fl">.4</span>)</a></code></pre></div>
 <pre><code>## 
 ## Call:
 ## lm(formula = l_price ~ Bedroom.AbvGr, data = ames_train.4)
@@ -1022,14 +1028,14 @@ Holding constant all other variables in the model, on average, an additional bed
 ## F-statistic: 40.79 on 1 and 998 DF,  p-value: 2.588e-10</code></pre>
 
 <p>In a linear model, we assume that all observations in the data are generated from the same process. You are concerned that houses sold in abnormal sale conditions may not exhibit the same behavior as houses sold in normal sale conditions. To visualize this, you make the following plot of 1st and 2nd floor square footage versus log(price):</p>
-<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb55-1" data-line-number="1">n.Sale.Condition =<span class="st"> </span><span class="kw">length</span>(<span class="kw">levels</span>(ames_train<span class="op">$</span>Sale.Condition))</a>
-<a class="sourceLine" id="cb55-2" data-line-number="2"><span class="kw">par</span>(<span class="dt">mar=</span><span class="kw">c</span>(<span class="dv">5</span>,<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">10</span>))</a>
-<a class="sourceLine" id="cb55-3" data-line-number="3"><span class="kw">plot</span>(<span class="kw">log</span>(price) <span class="op">~</span><span class="st"> </span><span class="kw">I</span>(X1st.Flr.SF<span class="op">+</span>X2nd.Flr.SF), </a>
-<a class="sourceLine" id="cb55-4" data-line-number="4">     <span class="dt">data=</span>ames_train, <span class="dt">col=</span>Sale.Condition,</a>
-<a class="sourceLine" id="cb55-5" data-line-number="5">     <span class="dt">pch=</span><span class="kw">as.numeric</span>(Sale.Condition)<span class="op">+</span><span class="dv">15</span>, <span class="dt">main=</span><span class="st">&quot;Training Data&quot;</span>)</a>
-<a class="sourceLine" id="cb55-6" data-line-number="6"><span class="kw">legend</span>(<span class="dt">x=</span>,<span class="st">&quot;right&quot;</span>, <span class="dt">legend=</span><span class="kw">levels</span>(ames_train<span class="op">$</span>Sale.Condition),</a>
-<a class="sourceLine" id="cb55-7" data-line-number="7">       <span class="dt">col=</span><span class="dv">1</span><span class="op">:</span>n.Sale.Condition, <span class="dt">pch=</span><span class="dv">15</span><span class="op">+</span>(<span class="dv">1</span><span class="op">:</span>n.Sale.Condition),</a>
-<a class="sourceLine" id="cb55-8" data-line-number="8">       <span class="dt">bty=</span><span class="st">&quot;n&quot;</span>, <span class="dt">xpd=</span><span class="ot">TRUE</span>, <span class="dt">inset=</span><span class="kw">c</span>(<span class="op">-</span>.<span class="dv">5</span>,<span class="dv">0</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb62-1" data-line-number="1">n.Sale.Condition =<span class="st"> </span><span class="kw">length</span>(<span class="kw">levels</span>(ames_train<span class="op">$</span>Sale.Condition))</a>
+<a class="sourceLine" id="cb62-2" data-line-number="2"><span class="kw">par</span>(<span class="dt">mar=</span><span class="kw">c</span>(<span class="dv">5</span>,<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">10</span>))</a>
+<a class="sourceLine" id="cb62-3" data-line-number="3"><span class="kw">plot</span>(<span class="kw">log</span>(price) <span class="op">~</span><span class="st"> </span><span class="kw">I</span>(X1st.Flr.SF<span class="op">+</span>X2nd.Flr.SF), </a>
+<a class="sourceLine" id="cb62-4" data-line-number="4">     <span class="dt">data=</span>ames_train, <span class="dt">col=</span>Sale.Condition,</a>
+<a class="sourceLine" id="cb62-5" data-line-number="5">     <span class="dt">pch=</span><span class="kw">as.numeric</span>(Sale.Condition)<span class="op">+</span><span class="dv">15</span>, <span class="dt">main=</span><span class="st">&quot;Training Data&quot;</span>)</a>
+<a class="sourceLine" id="cb62-6" data-line-number="6"><span class="kw">legend</span>(<span class="dt">x=</span>,<span class="st">&quot;right&quot;</span>, <span class="dt">legend=</span><span class="kw">levels</span>(ames_train<span class="op">$</span>Sale.Condition),</a>
+<a class="sourceLine" id="cb62-7" data-line-number="7">       <span class="dt">col=</span><span class="dv">1</span><span class="op">:</span>n.Sale.Condition, <span class="dt">pch=</span><span class="dv">15</span><span class="op">+</span>(<span class="dv">1</span><span class="op">:</span>n.Sale.Condition),</a>
+<a class="sourceLine" id="cb62-8" data-line-number="8">       <span class="dt">bty=</span><span class="st">&quot;n&quot;</span>, <span class="dt">xpd=</span><span class="ot">TRUE</span>, <span class="dt">inset=</span><span class="kw">c</span>(<span class="op">-</span>.<span class="dv">5</span>,<span class="dv">0</span>))</a></code></pre></div>
 <p><img src="data:image/png;base64,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" width="672" /></p>
 <ol start="10" style="list-style-type: decimal">
 <li>Which of the following sale condition categories shows significant differences from the normal selling condition?
@@ -1044,7 +1050,7 @@ Holding constant all other variables in the model, on average, an additional bed
 <strong><code>Abnorm</code> and <code>Partial</code></strong>
 </ol></li>
 </ol>
-<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb56-1" data-line-number="1"><span class="co"># type your code for Question 10 here, and Knit</span></a></code></pre></div>
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb63-1" data-line-number="1"><span class="co"># type your code for Question 10 here, and Knit</span></a></code></pre></div>
 
 <p>Because houses with non-normal selling conditions exhibit atypical behavior and can disproportionately influence the model, you decide to only model housing prices under only <strong>normal sale conditions</strong>.</p>
 <ol start="11" style="list-style-type: decimal">
@@ -1060,16 +1066,16 @@ Holding constant all other variables in the model, on average, an additional bed
 91.8%
 </ol></li>
 </ol>
-<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb57-1" data-line-number="1"><span class="co"># type your code for Question 11 here, and Knit</span></a>
-<a class="sourceLine" id="cb57-2" data-line-number="2">n.no.normal =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb57-3" data-line-number="3"><span class="st">  </span><span class="kw">filter</span>(Sale.Condition <span class="op">==</span><span class="st"> 'Abnorml'</span> <span class="op">|</span><span class="st"> </span>Sale.Condition <span class="op">==</span><span class="st"> 'Partial'</span>) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb57-4" data-line-number="4"><span class="st">  </span><span class="kw">nrow</span>()</a>
-<a class="sourceLine" id="cb57-5" data-line-number="5"></a>
-<a class="sourceLine" id="cb57-6" data-line-number="6">n.normal =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb57-7" data-line-number="7"><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span>(Sale.Condition <span class="op">==</span><span class="st"> 'Abnorml'</span> <span class="op">|</span><span class="st"> </span>Sale.Condition <span class="op">==</span><span class="st"> 'Partial'</span>)) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb57-8" data-line-number="8"><span class="st">  </span><span class="kw">nrow</span>()</a>
-<a class="sourceLine" id="cb57-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb57-10" data-line-number="10">n.normal <span class="op">/</span><span class="st"> </span>(n.normal <span class="op">+</span><span class="st"> </span>n.no.normal)</a></code></pre></div>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb64-1" data-line-number="1"><span class="co"># type your code for Question 11 here, and Knit</span></a>
+<a class="sourceLine" id="cb64-2" data-line-number="2">n.no.normal =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb64-3" data-line-number="3"><span class="st">  </span><span class="kw">filter</span>(Sale.Condition <span class="op">==</span><span class="st"> 'Abnorml'</span> <span class="op">|</span><span class="st"> </span>Sale.Condition <span class="op">==</span><span class="st"> 'Partial'</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb64-4" data-line-number="4"><span class="st">  </span><span class="kw">nrow</span>()</a>
+<a class="sourceLine" id="cb64-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb64-6" data-line-number="6">n.normal =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb64-7" data-line-number="7"><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span>(Sale.Condition <span class="op">==</span><span class="st"> 'Abnorml'</span> <span class="op">|</span><span class="st"> </span>Sale.Condition <span class="op">==</span><span class="st"> 'Partial'</span>)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb64-8" data-line-number="8"><span class="st">  </span><span class="kw">nrow</span>()</a>
+<a class="sourceLine" id="cb64-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb64-10" data-line-number="10">n.normal <span class="op">/</span><span class="st"> </span>(n.normal <span class="op">+</span><span class="st"> </span>n.no.normal)</a></code></pre></div>
 <pre><code>## [1] 0.857</code></pre>
 
 <ol start="12" style="list-style-type: decimal">
@@ -1085,17 +1091,17 @@ False, restricting the model to only include observations with normal sale condi
 False, restricting the model to only include observations with normal sale conditions decreases the <span class="math inline">\(R^2\)</span> from 0.603 to 0.575.
 </ol></li>
 </ol>
-<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb59-1" data-line-number="1"><span class="co"># type your code for Question 12 here, and Knit</span></a>
-<a class="sourceLine" id="cb59-2" data-line-number="2">ames_train.<span class="fl">2.</span>normal =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb59-3" data-line-number="3"><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span>(Sale.Condition <span class="op">==</span><span class="st"> 'Abnorml'</span> <span class="op">|</span><span class="st"> </span>Sale.Condition <span class="op">==</span><span class="st"> 'Partial'</span>)) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb59-4" data-line-number="4"><span class="st">  </span><span class="kw">select</span>(price, area, Neighborhood)</a>
-<a class="sourceLine" id="cb59-5" data-line-number="5"></a>
-<a class="sourceLine" id="cb59-6" data-line-number="6">ames_train.<span class="fl">2.</span>normal =<span class="st"> </span>ames_train.<span class="fl">2.</span>normal <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb59-7" data-line-number="7"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">l_price =</span> <span class="kw">log</span>(price),</a>
-<a class="sourceLine" id="cb59-8" data-line-number="8">         <span class="dt">l_area =</span> <span class="kw">log</span>(area))</a>
-<a class="sourceLine" id="cb59-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb59-10" data-line-number="10">ames.normal.lm<span class="fl">.2</span> =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>l_area, <span class="dt">data =</span> ames_train.<span class="fl">2.</span>normal)</a>
-<a class="sourceLine" id="cb59-11" data-line-number="11"><span class="kw">summary</span>(ames.normal.lm<span class="fl">.2</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb66-1" data-line-number="1"><span class="co"># type your code for Question 12 here, and Knit</span></a>
+<a class="sourceLine" id="cb66-2" data-line-number="2">ames_train.<span class="fl">2.</span>normal =<span class="st"> </span>ames_train <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb66-3" data-line-number="3"><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span>(Sale.Condition <span class="op">==</span><span class="st"> 'Abnorml'</span> <span class="op">|</span><span class="st"> </span>Sale.Condition <span class="op">==</span><span class="st"> 'Partial'</span>)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb66-4" data-line-number="4"><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(price, area, Neighborhood)</a>
+<a class="sourceLine" id="cb66-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb66-6" data-line-number="6">ames_train.<span class="fl">2.</span>normal =<span class="st"> </span>ames_train.<span class="fl">2.</span>normal <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb66-7" data-line-number="7"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">l_price =</span> <span class="kw">log</span>(price),</a>
+<a class="sourceLine" id="cb66-8" data-line-number="8">         <span class="dt">l_area =</span> <span class="kw">log</span>(area))</a>
+<a class="sourceLine" id="cb66-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb66-10" data-line-number="10">ames.normal.lm<span class="fl">.2</span> =<span class="st"> </span><span class="kw">lm</span>(l_price <span class="op">~</span><span class="st"> </span>l_area, <span class="dt">data =</span> ames_train.<span class="fl">2.</span>normal)</a>
+<a class="sourceLine" id="cb66-11" data-line-number="11"><span class="kw">summary</span>(ames.normal.lm<span class="fl">.2</span>)</a></code></pre></div>
 <pre><code>## 
 ## Call:
 ## lm(formula = l_price ~ l_area, data = ames_train.2.normal)
